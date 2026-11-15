@@ -8,9 +8,8 @@ public class AxionConfig {
     public static boolean hideTyping = false;
     public static boolean hideReadVoice = false;
     public static boolean offlineMode = false;
-    public static boolean antiDelete = true;
-    public static boolean antiEdit = true;
     public static boolean allowSaveRestricted = true;
+    public static boolean preventTTL = true;
     public static boolean blockSponsored = true;
     public static boolean showPeerId = true;
 
@@ -25,9 +24,8 @@ public class AxionConfig {
                 hideTyping = preferences.getBoolean("hideTyping", false);
                 hideReadVoice = preferences.getBoolean("hideReadVoice", false);
                 offlineMode = preferences.getBoolean("offlineMode", false);
-                antiDelete = preferences.getBoolean("antiDelete", true);
-                antiEdit = preferences.getBoolean("antiEdit", true);
                 allowSaveRestricted = preferences.getBoolean("allowSaveRestricted", true);
+                preventTTL = preferences.getBoolean("preventTTL", true);
                 blockSponsored = preferences.getBoolean("blockSponsored", true);
                 showPeerId = preferences.getBoolean("showPeerId", true);
                 configLoaded = true;
@@ -55,19 +53,14 @@ public class AxionConfig {
         save("offlineMode", value);
     }
 
-    public static void setAntiDelete(boolean value) {
-        antiDelete = value;
-        save("antiDelete", value);
-    }
-
-    public static void setAntiEdit(boolean value) {
-        antiEdit = value;
-        save("antiEdit", value);
-    }
-
     public static void setAllowSaveRestricted(boolean value) {
         allowSaveRestricted = value;
         save("allowSaveRestricted", value);
+    }
+
+    public static void setPreventTTL(boolean value) {
+        preventTTL = value;
+        save("preventTTL", value);
     }
 
     public static void setBlockSponsored(boolean value) {
@@ -78,6 +71,36 @@ public class AxionConfig {
     public static void setShowPeerId(boolean value) {
         showPeerId = value;
         save("showPeerId", value);
+    }
+
+    public static boolean shouldFilterRequest(Object obj) {
+        if (obj == null) return false;
+        loadConfig();
+        String className = obj.getClass().getSimpleName();
+        if (ghostMode) {
+            if (className.equals("TL_messages_readHistory") ||
+                className.equals("TL_channels_readHistory")) {
+                return true;
+            }
+        }
+        if (hideReadVoice) {
+            if (className.equals("TL_messages_readMessageContents") ||
+                className.equals("TL_channels_readMessageContents")) {
+                return true;
+            }
+        }
+        if (hideTyping) {
+            if (className.equals("TL_messages_setTyping") ||
+                className.equals("TL_messages_setEncryptedTyping")) {
+                return true;
+            }
+        }
+        if (blockSponsored) {
+            if (className.contains("Sponsored") || className.contains("sponsored")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static void save(String key, boolean value) {

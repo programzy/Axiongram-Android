@@ -13718,12 +13718,19 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             value = LocaleController.getString(R.string.Username);
                             if (username != null) {
                                 text = "@" + username;
+                                if (org.telegram.messenger.AxionConfig.showPeerId && user != null && user.id != 0) {
+                                    text += "  [ID: " + user.id + "]";
+                                }
                                 if (usernameObj != null && !usernameObj.editable) {
                                     text = new SpannableString(text);
                                     ((SpannableString) text).setSpan(makeUsernameLinkSpan(usernameObj), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 }
                             } else {
-                                text = "—";
+                                if (org.telegram.messenger.AxionConfig.showPeerId && user != null && user.id != 0) {
+                                    text = "[ID: " + user.id + "]";
+                                } else {
+                                    text = "—";
+                                }
                             }
                             containsQr = !myProfile;
                         } else if (currentChat != null) {

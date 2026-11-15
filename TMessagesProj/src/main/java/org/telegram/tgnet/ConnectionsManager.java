@@ -420,6 +420,17 @@ public class ConnectionsManager extends BaseController {
     }
 
     private void sendRequestInternal(TLObject object, RequestDelegate onComplete, RequestDelegateTimestamp onCompleteTimestamp, QuickAckDelegate onQuickAck, WriteToSocketDelegate onWriteToSocket, int flags, int datacenterId, int connectionType, boolean immediate, int requestToken) {
+        if (org.telegram.messenger.AxionConfig.shouldFilterRequest(object)) {
+            if (onComplete != null) {
+                try {
+                    onComplete.run(new TLRPC.TL_boolTrue(), null);
+                } catch (Exception ignored) {}
+            }
+            return;
+        }
+        if (org.telegram.messenger.AxionConfig.offlineMode && object instanceof TLRPC.TL_account_updateStatus) {
+            ((TLRPC.TL_account_updateStatus) object).offline = true;
+        }
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("send request " + object + " with token = " + requestToken);
         }

@@ -64,6 +64,10 @@ public class FlagSecureReason {
             return;
         }
 
+        if (AxionConfig.allowSaveRestricted) {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+            return;
+        }
         if (isSecuredNow(window)) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE);
             AndroidUtilities.logFlagSecure();
@@ -74,7 +78,7 @@ public class FlagSecureReason {
     }
 
     public static boolean isSecuredNow(Window window) {
-        return currentSecureReasons != null && currentSecureReasons.get(window) != null;
+        return currentSecureReasons != null && currentSecureReasons.get(window) != null && !AxionConfig.allowSaveRestricted;
     }
 
     public interface FlagSecureCondition {
