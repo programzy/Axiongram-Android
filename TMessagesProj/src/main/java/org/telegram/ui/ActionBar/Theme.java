@@ -4098,6 +4098,16 @@ public class Theme {
         themes.add(themeInfo);
         themesDict.put("Night", themeInfo);
 
+        themeInfo = new ThemeInfo();
+        themeInfo.name = "Axion Dark";
+        themeInfo.assetName = "axion_dark.attheme";
+        themeInfo.previewBackgroundColor = 0xff0d1117;
+        themeInfo.previewInColor = 0xff161c24;
+        themeInfo.previewOutColor = 0xff14253d;
+        themeInfo.sortIndex = 5;
+        themes.add(themeInfo);
+        themesDict.put("Axion Dark", themeInfo);
+
         String themesString = themeConfig.getString("themes2", null);
 
         int remoteVersion = themeConfig.getInt("remote_version", 0);

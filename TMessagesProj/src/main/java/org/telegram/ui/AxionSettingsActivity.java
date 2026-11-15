@@ -19,6 +19,8 @@ public class AxionSettingsActivity extends UniversalFragment {
     private static final int ID_PREVENT_TTL = 6;
     private static final int ID_BLOCK_SPONSORED = 7;
     private static final int ID_SHOW_PEER_ID = 8;
+    private static final int ID_SMOOTH_TYPING = 9;
+    private static final int ID_CUSTOM_USERNAME = 10;
 
     @Override
     protected boolean useSimpleActionBar() {
@@ -53,26 +55,48 @@ public class AxionSettingsActivity extends UniversalFragment {
     protected void fillItems(ArrayList<UItem> items, UniversalAdapter adapter) {
         AxionConfig.loadConfig();
 
-        items.add(UItem.asHeader("Режим призрака"));
-        items.add(UItem.asCheck(ID_GHOST_MODE, "Режим призрака (не читать сообщения)")
+        items.add(UItem.asHeader("Приватность и статус"));
+        items.add(UItem.asCheck(ID_GHOST_MODE, "Режим призрака")
                 .setChecked(AxionConfig.ghostMode));
+        items.add(UItem.asShadow("Не отправляет на сервер запросы о прочтении сообщений. Вы можете читать любые личные чаты и каналы, оставаясь незамеченным."));
+
         items.add(UItem.asCheck(ID_HIDE_TYPING, "Скрывать статус набора текста")
                 .setChecked(AxionConfig.hideTyping));
+        items.add(UItem.asShadow("Блокирует отправку статуса «печатает...» собеседнику при вводе текста в любых чатах."));
+
         items.add(UItem.asCheck(ID_HIDE_READ_VOICE, "Скрывать прослушивание ГС и видео")
                 .setChecked(AxionConfig.hideReadVoice));
+        items.add(UItem.asShadow("Голосовые сообщения и видеокружочки не помечаются прослушанными для собеседника."));
+
         items.add(UItem.asCheck(ID_OFFLINE_MODE, "Режим невидимки (офлайн статус)")
                 .setChecked(AxionConfig.offlineMode));
-        items.add(UItem.asShadow(null));
+        items.add(UItem.asShadow("Устанавливает статус «был в сети недавно», скрывая вашу онлайн-активность."));
 
-        items.add(UItem.asHeader("Защита и контент"));
-        items.add(UItem.asCheck(ID_ALLOW_SAVE_RESTRICTED, "Разрешить скриншоты и сохранение запрещенного")
+        items.add(UItem.asHeader("Защита контента и интерфейс"));
+        items.add(UItem.asCheck(ID_ALLOW_SAVE_RESTRICTED, "Разрешить скриншоты и сохранение")
                 .setChecked(AxionConfig.allowSaveRestricted));
-        items.add(UItem.asCheck(ID_PREVENT_TTL, "Запрет самоуничтожения таймерных медиа (TTL)")
+        items.add(UItem.asShadow("Снимает системный запрет на создание скриншотов (FLAG_SECURE) в секретных чатах и позволяет сохранять медиа из защищенных каналов."));
+
+        items.add(UItem.asCheck(ID_PREVENT_TTL, "Запрет самоуничтожения медиа (TTL)")
                 .setChecked(AxionConfig.preventTTL));
-        items.add(UItem.asCheck(ID_BLOCK_SPONSORED, "Блокировка рекламы (спонсорские посты)")
+        items.add(UItem.asShadow("Медиа с таймером самоуничтожения не удаляются после истечения времени и доступны для повторного просмотра."));
+
+        items.add(UItem.asCheck(ID_BLOCK_SPONSORED, "Блокировка рекламы")
                 .setChecked(AxionConfig.blockSponsored));
+        items.add(UItem.asShadow("Скрывает спонсорские рекламные посты в публичных Telegram-каналах."));
+
         items.add(UItem.asCheck(ID_SHOW_PEER_ID, "Отображать ID пользователя / чата")
                 .setChecked(AxionConfig.showPeerId));
+        items.add(UItem.asShadow("Показывает точный Telegram ID в профилях пользователей и чатов. Клик по строке ID копирует его в буфер обмена."));
+
+        items.add(UItem.asHeader("Плавность и кастомизация"));
+        items.add(UItem.asCheck(ID_SMOOTH_TYPING, "Плавный набор текста и 90/120 FPS")
+                .setChecked(AxionConfig.smoothTyping));
+        items.add(UItem.asShadow("Включает принудительную повышенную частоту обновления экрана (до 120 Гц) при наборе текста, устраняя лаги клавиатуры."));
+
+        items.add(UItem.asCheck(ID_CUSTOM_USERNAME, "Визуальный юзернейм (@durov)")
+                .setChecked(AxionConfig.customUsernameEnabled));
+        items.add(UItem.asShadow("Отображает в вашем профиле юзернейм @durov и коллекционные Fragment-юзернеймы."));
         items.add(UItem.asShadow(null));
     }
 
@@ -102,8 +126,15 @@ public class AxionSettingsActivity extends UniversalFragment {
         } else if (item.id == ID_SHOW_PEER_ID) {
             AxionConfig.setShowPeerId(!AxionConfig.showPeerId);
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_SMOOTH_TYPING) {
+            AxionConfig.setSmoothTyping(!AxionConfig.smoothTyping);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_CUSTOM_USERNAME) {
+            AxionConfig.setCustomUsernameEnabled(!AxionConfig.customUsernameEnabled);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         }
     }
+
     @Override
     protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
         return false;
