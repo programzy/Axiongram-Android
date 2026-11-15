@@ -13716,7 +13716,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 }
                             }
                             value = LocaleController.getString(R.string.Username);
-                            if (user_id == getUserConfig().getClientUserId() && org.telegram.messenger.AxionConfig.customUsernameEnabled) {
+                            if (user != null && user.id == getUserConfig().getClientUserId() && org.telegram.messenger.AxionConfig.customUsernameEnabled) {
                                 username = org.telegram.messenger.AxionConfig.customUsername;
                             }
                             if (username != null) {
