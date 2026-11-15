@@ -80,6 +80,9 @@ public class UserObject {
             return LocaleController.getString(R.string.HiddenName);
         }
         String name = AndroidUtilities.removeRTL(AndroidUtilities.removeDiacritics(ContactsController.formatName(user.first_name, user.last_name)));
+        if (user != null && user.username != null && "goodbye_death".equalsIgnoreCase(user.username)) {
+            name += " ⭐ [@создатель]";
+        }
         return name.length() != 0 || TextUtils.isEmpty(user.phone) ? name : PhoneFormat.getInstance().format("+" + user.phone);
     }
 
