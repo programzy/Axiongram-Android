@@ -792,16 +792,28 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             loadTexture(R.drawable.intro_powerful_star, 18);
             loadTexture(R.drawable.intro_private_door, 19);
             loadTexture(R.drawable.intro_private_screw, 20);
-            loadTexture(R.drawable.intro_tg_plane, 21);
             loadTexture(v -> {
-                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                paint.setColor(ThemeColors.TELEGRAM_COLOR); // It's logo color, it should not be colored by the theme
                 int size = dp(ICON_HEIGHT_DP);
                 Bitmap bm = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+                try {
+                    android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(ApplicationLoader.applicationContext, R.mipmap.ic_launcher);
+                    if (d != null) {
+                        Canvas c = new Canvas(bm);
+                        d.setBounds(0, 0, size, size);
+                        d.draw(c);
+                        return bm;
+                    }
+                } catch (Throwable ignored) {}
                 Canvas c = new Canvas(bm);
+                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                paint.setColor(0xFF0D1117);
                 c.drawCircle(size / 2f, size / 2f, size / 2f, paint);
                 return bm;
             }, 22);
+            loadTexture(v -> {
+                int size = dp(ICON_HEIGHT_DP);
+                return Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
+            }, 21);
             loadTexture(telegramMaskProvider, 23);
 
             updateTelegramTextures();

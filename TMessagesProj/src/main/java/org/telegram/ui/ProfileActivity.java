@@ -7436,6 +7436,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
         if (position == usernameRow || position == setUsernameRow) {
+            if (org.telegram.messenger.AxionConfig.showPeerId && userId != 0) {
+                try {
+                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("user_id", String.valueOf(userId));
+                    clipboard.setPrimaryClip(clip);
+                    BulletinFactory.of(ProfileActivity.this).createCopyBulletin("ID скопирован в буфер обмена").show();
+                    return true;
+                } catch (Throwable ignored) {}
+            }
             final String username;
             final TLRPC.TL_username usernameObj;
             if (userId != 0) {
@@ -13720,13 +13729,15 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 username = org.telegram.messenger.AxionConfig.customUsername;
                             }
                             if (username != null) {
-                                text = "@" + username;
+                                SpannableStringBuilder ssb = new SpannableStringBuilder("@" + username);
                                 if (org.telegram.messenger.AxionConfig.showPeerId && user != null && user.id != 0) {
-                                    text += "  [ID: " + user.id + "]";
+                                    int start = ssb.length();
+                                    ssb.append("  [ID: ").append(String.valueOf(user.id)).append("]");
+                                    ssb.setSpan(new ForegroundColorSpan(0xFF00D2FF), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 }
+                                text = ssb;
                                 if (usernameObj != null && !usernameObj.editable) {
-                                    text = new SpannableString(text);
-                                    ((SpannableString) text).setSpan(makeUsernameLinkSpan(usernameObj), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    ((SpannableStringBuilder) text).setSpan(makeUsernameLinkSpan(usernameObj), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 }
                             } else {
                                 if (org.telegram.messenger.AxionConfig.showPeerId && user != null && user.id != 0) {

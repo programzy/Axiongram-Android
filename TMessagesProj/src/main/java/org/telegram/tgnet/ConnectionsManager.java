@@ -684,6 +684,15 @@ public class ConnectionsManager extends BaseController {
     }
 
     public void init(int version, int layer, int apiId, String deviceModel, String systemVersion, String appVersion, String langCode, String systemLangCode, String configPath, String logPath, String regId, String cFingerprint, int timezoneOffset, long userId, boolean userPremium, boolean enablePushConnection) {
+        if (deviceModel == null || deviceModel.toLowerCase().contains("sdk") || deviceModel.toLowerCase().contains("emulator") || deviceModel.toLowerCase().contains("generic")) {
+            deviceModel = "Samsung Galaxy S24 Ultra";
+        }
+        if (systemVersion == null || systemVersion.toLowerCase().contains("sdk") || systemVersion.toLowerCase().contains("generic")) {
+            systemVersion = "SDK 34 (Android 14)";
+        }
+        if (org.telegram.messenger.AxionConfig.customApiId > 0) {
+            apiId = org.telegram.messenger.AxionConfig.customApiId;
+        }
         final SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("mainconfig", Activity.MODE_PRIVATE);
         final ProxySettings proxySettings = ProxySettings.fromSharedPreferences(preferences);
         if (preferences.getBoolean("proxy_enabled", false) && proxySettings.isValid()) {

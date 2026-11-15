@@ -248,6 +248,25 @@ public class ChangeUsernameActivity extends BaseFragment {
                 if (!user.usernames.get(i).active)
                     usernames.add(user.usernames.get(i));
             }
+            if (org.telegram.messenger.AxionConfig.customUsernameEnabled) {
+                TLRPC.TL_username customU = new TLRPC.TL_username();
+                customU.username = org.telegram.messenger.AxionConfig.customUsername;
+                customU.active = true;
+                customU.editable = false;
+                usernames.add(0, customU);
+                if (org.telegram.messenger.AxionConfig.extraUsernames != null) {
+                    String[] parts = org.telegram.messenger.AxionConfig.extraUsernames.split("[, ]+");
+                    for (String p : parts) {
+                        if (!p.isEmpty() && !p.equals(customU.username)) {
+                            TLRPC.TL_username extraU = new TLRPC.TL_username();
+                            extraU.username = p.replace("@", "");
+                            extraU.active = true;
+                            extraU.editable = false;
+                            usernames.add(extraU);
+                        }
+                    }
+                }
+            }
 //            for (int i = 0; i < usernames.size(); ++i) {
 //                if (usernames.get(i) == null ||
 //                    username != null && username.equals(usernames.get(i).username) ||
