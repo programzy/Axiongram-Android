@@ -7436,7 +7436,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
         if (position == usernameRow || position == setUsernameRow) {
-            long targetId = userId != 0 ? userId : (dialogId != 0 ? dialogId : (user != null ? user.id : getUserConfig().getClientUserId()));
+            long targetId = userId != 0 ? userId : (dialogId != 0 ? dialogId : getUserConfig().getClientUserId());
             if (org.telegram.messenger.AxionConfig.showPeerId && targetId != 0) {
                 try {
                     android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
