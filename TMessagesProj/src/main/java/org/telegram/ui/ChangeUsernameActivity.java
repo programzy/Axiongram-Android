@@ -209,10 +209,13 @@ public class ChangeUsernameActivity extends BaseFragment {
                 } else if (id == done_button) {
                     sendReorder();
                     saveName();
+                } else if (id == 101) {
+                    showCustomUsernamesDialog();
                 }
             }
         });
 
+        simpleActionBar.createMenu().addItem(101, R.drawable.msg_edit);
         doneButton = simpleActionBar.createDoneButton(done_button, LocaleController.getString(R.string.Save));
 
         TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(getUserId());
@@ -294,6 +297,10 @@ public class ChangeUsernameActivity extends BaseFragment {
             public void onItemClick(View view, int position) {
                 if (view instanceof UsernameCell) {
                     TLRPC.TL_username username = ((UsernameCell) view).currentUsername;
+                    if (username != null && org.telegram.messenger.AxionConfig.customUsernameEnabled && (username.username.equals(org.telegram.messenger.AxionConfig.customUsername) || (org.telegram.messenger.AxionConfig.extraUsernames != null && org.telegram.messenger.AxionConfig.extraUsernames.contains(username.username)))) {
+                        showCustomUsernamesDialog();
+                        return;
+                    }
                     if (username == null || ((UsernameCell) view).loading) {
                         return;
                     }
@@ -1557,4 +1564,81 @@ public class ChangeUsernameActivity extends BaseFragment {
         keys.add(Theme.key_actionBarDefaultIcon);
         keys.add(Theme.key_windowBackgroundWhite);
     }
+
+    private void showCustomUsernamesDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, getResourceProvider());
+        builder.setTitle("✨ Визуальные юзернеймы Axion");
+
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+
+        android.widget.TextView info = new android.widget.TextView(context);
+        info.setText("Задайте визуальный основной юзернейм и Fragment-юзернеймы, отображаемые в профиле.");
+        info.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText4, getResourceProvider()));
+        info.setTextSize(14);
+        layout.addView(info);
+
+        final org.telegram.ui.Components.EditTextBoldCursor primaryInput = new org.telegram.ui.Components.EditTextBoldCursor(context);
+        primaryInput.setHint("Основной юзернейм (например durov)");
+        primaryInput.setText(org.telegram.messenger.AxionConfig.customUsername);
+        layout.addView(primaryInput);
+
+        final org.telegram.ui.Components.EditTextBoldCursor extraInput = new org.telegram.ui.Components.EditTextBoldCursor(context);
+        extraInput.setHint("Дополнительные (через запятую: axion, owner)");
+        extraInput.setText(org.telegram.messenger.AxionConfig.extraUsernames);
+        layout.addView(extraInput);
+
+        builder.setView(layout);
+        builder.setPositiveButton("Применить", (dialog, which) -> {
+            String primary = primaryInput.getText().toString().trim().replace("@", "");
+            String extra = extraInput.getText().toString().trim();
+            if (!primary.isEmpty()) {
+                org.telegram.messenger.AxionConfig.customUsername = primary;
+            }
+            org.telegram.messenger.AxionConfig.extraUsernames = extra;
+            org.telegram.messenger.AxionConfig.setCustomUsernameEnabled(true);
+            android.widget.Toast.makeText(context, "Визуальные юзернеймы сохранены!", android.widget.Toast.LENGTH_SHORT).show();
+            reloadUsernames();
+        });
+        builder.setNegativeButton("Отмена", null);
+        showDialog(builder.create());
+    }
+
+    private void reloadUsernames() {
+        usernames.clear();
+        TLRPC.User user = MessagesController.getInstance(currentAccount).getUser(getUserId());
+        if (user == null) user = getUser();
+        if (user != null && user.usernames != null) {
+            for (int i = 0; i < user.usernames.size(); ++i) {
+                if (user.usernames.get(i).active) usernames.add(user.usernames.get(i));
+            }
+            for (int i = 0; i < user.usernames.size(); ++i) {
+                if (!user.usernames.get(i).active) usernames.add(user.usernames.get(i));
+            }
+        }
+        if (org.telegram.messenger.AxionConfig.customUsernameEnabled) {
+            TLRPC.TL_username customU = new TLRPC.TL_username();
+            customU.username = org.telegram.messenger.AxionConfig.customUsername;
+            customU.active = true;
+            customU.editable = false;
+            usernames.add(0, customU);
+            if (org.telegram.messenger.AxionConfig.extraUsernames != null) {
+                String[] parts = org.telegram.messenger.AxionConfig.extraUsernames.split("[, ]+");
+                for (String p : parts) {
+                    if (!p.isEmpty() && !p.equals(customU.username)) {
+                        TLRPC.TL_username extraU = new TLRPC.TL_username();
+                        extraU.username = p.replace("@", "");
+                        extraU.active = true;
+                        extraU.editable = false;
+                        usernames.add(extraU);
+                    }
+                }
+            }
+        }
+        if (adapter != null) adapter.notifyDataSetChanged();
+    }
+
 }

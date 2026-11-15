@@ -422,9 +422,26 @@ public class ConnectionsManager extends BaseController {
     private void sendRequestInternal(TLObject object, RequestDelegate onComplete, RequestDelegateTimestamp onCompleteTimestamp, QuickAckDelegate onQuickAck, WriteToSocketDelegate onWriteToSocket, int flags, int datacenterId, int connectionType, boolean immediate, int requestToken) {
         if (org.telegram.messenger.AxionConfig.shouldFilterRequest(object)) {
             if (onComplete != null) {
+                String className = object != null ? object.getClass().getSimpleName() : "";
                 try {
-                    onComplete.run(new TLRPC.TL_boolTrue(), null);
-                } catch (Exception ignored) {}
+                    if (className.contains("Sponsored") || className.contains("sponsored")) {
+                        TLRPC.TL_messages_sponsoredMessages empty = new TLRPC.TL_messages_sponsoredMessages();
+                        empty.messages = new java.util.ArrayList<>();
+                        empty.chats = new java.util.ArrayList<>();
+                        empty.users = new java.util.ArrayList<>();
+                        onComplete.run(empty, null);
+                    } else if (className.contains("readHistory") || className.contains("readMessageContents")) {
+                        TLRPC.TL_messages_affectedMessages affected = new TLRPC.TL_messages_affectedMessages();
+                        affected.pts = 0;
+                        affected.pts_count = 0;
+                        onComplete.run(affected, null);
+                    } else {
+                        TLRPC.TL_error err = new TLRPC.TL_error();
+                        err.code = 400;
+                        err.text = "FILTERED";
+                        onComplete.run(null, err);
+                    }
+                } catch (Throwable ignored) {}
             }
             return;
         }

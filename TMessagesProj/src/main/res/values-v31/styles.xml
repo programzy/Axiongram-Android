@@ -20,8 +20,8 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:actionBarStyle">@style/ActionBar.Transparent.TMessages.Start</item>
-        <item name="android:colorBackground">@android:color/white</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">#0d1117</item>
+        <item name="android:windowBackground">#0d1117</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:colorPrimaryDark">#426482</item>
         <item name="android:colorPrimary">#527da3</item>
@@ -30,7 +30,7 @@
         <item name="android:forceDarkAllowed">false</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/tg_splash_320</item>
         <item name="android:windowSplashScreenAnimationDuration">@integer/splash_screen_duration</item>
-        <item name="android:windowSplashScreenBackground">?android:windowBackground</item>
+        <item name="android:windowSplashScreenBackground">#0d1117</item>
     </style>
 
     <style name="Theme.TMessages" parent="Theme.AppCompat.Light">
@@ -38,8 +38,8 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBarOverlay">false</item>
         <item name="android:windowContentOverlay">@null</item>
-        <item name="android:colorBackground">@android:color/white</item>
-        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:colorBackground">#0d1117</item>
+        <item name="android:windowBackground">#0d1117</item>
         <item name="android:itemTextAppearance">@style/ActionBar.Transparent.TMessages.Item</item>
         <item name="android:listViewStyle">@style/Theme.TMessages.ListView</item>
         <item name="android:listChoiceBackgroundIndicator">@drawable/list_selector_ex</item>

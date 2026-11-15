@@ -7436,12 +7436,16 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
         if (position == usernameRow || position == setUsernameRow) {
-            if (org.telegram.messenger.AxionConfig.showPeerId && userId != 0) {
+            long targetId = userId != 0 ? userId : (dialogId != 0 ? dialogId : (user != null ? user.id : getUserConfig().getClientUserId()));
+            if (org.telegram.messenger.AxionConfig.showPeerId && targetId != 0) {
                 try {
                     android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("user_id", String.valueOf(userId));
+                    android.content.ClipData clip = android.content.ClipData.newPlainText("user_id", String.valueOf(targetId));
                     clipboard.setPrimaryClip(clip);
-                    BulletinFactory.of(ProfileActivity.this).createCopyBulletin("ID скопирован в буфер обмена").show();
+                    android.widget.Toast.makeText(ApplicationLoader.applicationContext, "ID скопирован: " + targetId, android.widget.Toast.LENGTH_SHORT).show();
+                    try {
+                        BulletinFactory.of(ProfileActivity.this).createCopyBulletin("ID скопирован в буфер обмена").show();
+                    } catch (Throwable ignored2) {}
                     return true;
                 } catch (Throwable ignored) {}
             }
@@ -13734,6 +13738,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                     int start = ssb.length();
                                     ssb.append("  [ID: ").append(String.valueOf(user.id)).append("]");
                                     ssb.setSpan(new ForegroundColorSpan(0xFF00D2FF), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                    ssb.setSpan(new android.text.style.StyleSpan(android.graphics.Typeface.BOLD), start, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                                 }
                                 text = ssb;
                                 if (usernameObj != null && !usernameObj.editable) {

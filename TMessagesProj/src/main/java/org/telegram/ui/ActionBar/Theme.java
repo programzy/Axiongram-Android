@@ -204,7 +204,7 @@ public class Theme {
                 return;
             }
             ArrayList<ThemeAccent> accentsToLoad = null;
-            for (int b = 0; b < 5; b++) {
+            for (int b = 0; b < 6; b++) {
                 String key;
                 switch (b) {
                     case 0:
@@ -220,8 +220,11 @@ public class Theme {
                         key = "Day";
                         break;
                     case 4:
-                    default:
                         key = "Night";
+                        break;
+                    case 5:
+                    default:
+                        key = "Axion Dark";
                         break;
                 }
                 ThemeInfo info = themesDict.get(key);
@@ -1554,6 +1557,8 @@ public class Theme {
                 return getString(R.string.ThemeClassic);
             } else if ("Dark Blue".equals(name)) {
                 return getString(R.string.ThemeDark);
+            } else if ("Axion Dark".equals(name)) {
+                return "Axion Dark";
             } else if ("Arctic Blue".equals(name)) {
                 return getString(R.string.ThemeArcticBlue);
             } else if ("Day".equals(name)) {
@@ -1676,7 +1681,7 @@ public class Theme {
             if (isDark != UNKNOWN) {
                 return isDark == DARK;
             }
-            if ("Dark Blue".equals(name) || "Night".equals(name)) {
+            if ("Dark Blue".equals(name) || "Night".equals(name) || "Axion Dark".equals(name)) {
                 isDark = DARK;
             } else if ("Blue".equals(name) || "Arctic Blue".equals(name) || "Day".equals(name)) {
                 isDark = LIGHT;
@@ -1803,7 +1808,7 @@ public class Theme {
                 }
 
                 //override default themes
-                if (isHome(themeAccent) && name.equals("Dark Blue") || name.equals("Night")) {
+                if (isHome(themeAccent) && (name.equals("Dark Blue") || name.equals("Night") || name.equals("Axion Dark"))) {
                     themeAccent.myMessagesAccentColor = 0xff258DE5;
                     themeAccent.myMessagesGradientAccentColor1 = 0xff4272DF;
                     themeAccent.myMessagesGradientAccentColor2 = 0xff8146D7;
@@ -4105,6 +4110,8 @@ public class Theme {
         themeInfo.previewInColor = 0xff161c24;
         themeInfo.previewOutColor = 0xff14253d;
         themeInfo.sortIndex = 5;
+        themeInfo.accentBaseColor = 0xFF00D2FF;
+        themeInfo.currentAccentId = 0;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF00D2FF,                    0xFF3A86FF,                    0xFF8D78E3,                    0xFF6ABE3F,                    0xFFDE5E7E,                    0xFFDBC11A,                    0xff3e88f7,                    0xff4ab5d3,                    0xff4ab841,                    0xffd95576,                    0xffe27d2b,                    0xff936cda,                    0xffd04336,                    0xffe8ae1c },
                 new int[]    {                    0xFF00557A,                    0xFF1B3B6F,                    0xFF8A5294,                    0xFFB46C1B,                    0xFFAF4F6F,                    0xFF744EB7,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4113,7 +4120,7 @@ public class Theme {
                 new int[]    {                    0xFF0B1421,                    0xFF0D1B2A,                    0xFF201827,                    0xFF100f13,                    0xFF1b151a,                    0xFF0c0c0f,                    0xff090a0c,                    0xff0a0e0e,                    0xff080908,                    0xff1a1618,                    0xff13100d,                    0xff1e1a21,                    0xff0f0d0c,                    0xff0c0b08 },
                 new int[]    {                    0xFF0A101A,                    0xFF091421,                    0xFF0e0b13,                    0xFF211623,                    0xFF130e12,                    0xFF10191f,                    0xff181c28,                    0xff142121,                    0xff121812,                    0xff130e11,                    0xff1a130f,                    0xff0b0a0b,                    0xff120d0b,                    0xff15140f },
                 new int[]    {                    0xFF081320,                    0xFF0B1929,                    0xFF1e192a,                    0xFF111016,                    0xFF21141a,                    0xFF0a0d13,                    0xff0e0f12,                    0xff070c0b,                    0xff0b0d0b,                    0xff22121e,                    0xff0f0c0c,                    0xff110f17,                    0xff070606,                    0xff0c0a0a },
-                new int[]    {                             0,                             1,                             9,                            10,                            11,                            13,                             0,                             1,                             2,                             3,                             4,                             5,                             6,                             7 },
+                new int[]    {                             0,                             1,                             2,                             3,                             4,                             5,                             6,                             7,                             8,                             9,                            10,                            11,                            12,                            13 },
                 new String[] { "F5oWoCs7QFACAAAAgf2bD_mg8Bw", "fqv01SQemVIBAAAApND8LDRUhRU", "YIxYGEALQVADAAAAA3QbEH0AowY", "9LW_RcoOSVACAAAAFTk3DTyXN-M", "O-wmAfBPSFADAAAA4zINVfD_bro", "-Xc-np9y2VMCAAAARKr0yNNPYW0", "F5oWoCs7QFACAAAAgf2bD_mg8Bw", "ptuUd96JSFACAAAATobI23sPpz0", "p-pXcflrmFIBAAAAvXYQk-mCwZU", "Nl8Pg2rBQVACAAAA25Lxtb8SDp0", "dhf9pceaQVACAAAAbzdVo4SCiZA", "9GcNVISdSVADAAAAUcw5BYjELW4", "9LW_RcoOSVACAAAAFTk3DTyXN-M", "dk_wwlghOFACAAAAfz9xrxi6euw" },
                 new int[]    {                             0,                             0,                            45,                           135,                             0,                             0,                             0,                             0,                             0,                             0,                             0,                             0,                             0,                             0 },
                 new int[]    {                            45,                            48,                            34,                            47,                            52,                            54,                            50,                            37,                            56,                            48,                            49,                            40,                            64,                            38 }
@@ -6483,7 +6490,7 @@ public class Theme {
         editor.commit();
 
         if (full) {
-            for (int b = 0; b < 5; b++) {
+            for (int b = 0; b < 6; b++) {
                 String key;
                 switch (b) {
                     case 0:
@@ -6499,8 +6506,11 @@ public class Theme {
                         key = "Day";
                         break;
                     case 4:
-                    default:
                         key = "Night";
+                        break;
+                    case 5:
+                    default:
+                        key = "Axion Dark";
                         break;
                 }
                 ThemeInfo info = themesDict.get(key);
@@ -7231,7 +7241,7 @@ public class Theme {
             return new TLRPC.TL_baseThemeClassic();
         } else if ("Day".equals(key)) {
             return new TLRPC.TL_baseThemeDay();
-        } else if ("Dark Blue".equals(key)) {
+        } else if ("Dark Blue".equals(key) || "Axion Dark".equals(key)) {
             return new TLRPC.TL_baseThemeTinted();
         } else if ("Arctic Blue".equals(key)) {
             return new TLRPC.TL_baseThemeArctic();
@@ -10243,7 +10253,7 @@ public class Theme {
             if (accent.parentTheme.getKey().equals("Day") && accent.id == 9) {
                 return true;
             }
-            if ((accent.parentTheme.getKey().equals("Night") || accent.parentTheme.getKey().equals("Dark Blue")) && accent.id == 0) {
+            if ((accent.parentTheme.getKey().equals("Night") || accent.parentTheme.getKey().equals("Dark Blue") || accent.parentTheme.getKey().equals("Axion Dark")) && accent.id == 0) {
                 return true;
             }
         }

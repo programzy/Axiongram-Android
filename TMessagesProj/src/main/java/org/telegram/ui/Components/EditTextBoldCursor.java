@@ -1120,7 +1120,7 @@ public class EditTextBoldCursor extends EditTextEffects {
             if (animatedCursorLeft < 0 || Math.abs(animatedCursorLeft - b.left) > 300) {
                 animatedCursorLeft = b.left;
             } else if (animatedCursorLeft != b.left) {
-                float speed = 25f;
+                float speed = 14f;
                 animatedCursorLeft += (b.left - animatedCursorLeft) * Math.min(1.0f, dt * speed);
                 if (Math.abs(animatedCursorLeft - b.left) < 1.0f) {
                     animatedCursorLeft = b.left;

@@ -154,11 +154,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
     @Override
     public View createView(Context context) {
-        logoDrawable = context.getResources().getDrawable(R.drawable.telegram_logo).mutate();
-        logoDrawable.setBounds(0, dp(8.666f), dp(115), dp(35));
-        SpannableStringBuilder ssb = new SpannableStringBuilder(LocaleController.getString(R.string.Page1Title));
-        ssb.setSpan(new ImageSpan(logoDrawable), 0, ssb.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        titles[0] = ssb;
+        titles[0] = "AxionGram";
 
 
         actionBar.setAddToContainer(false);
@@ -660,11 +656,11 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         private long lastDrawFrame;
 
         private final GenericProvider<Void, Bitmap> telegramMaskProvider = v -> {
-            int size = dp(ICON_HEIGHT_DP);
-            Bitmap bm = Bitmap.createBitmap(dp(ICON_WIDTH_DP), size, Bitmap.Config.ARGB_8888);
+            int size = 512;
+            Bitmap bm = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
             Canvas c = new Canvas(bm);
-            c.drawColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            c.drawColor(0xFF0D1117);
+            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
             c.drawCircle(bm.getWidth() / 2f, bm.getHeight() / 2f, size / 2f, paint);
             return bm;
@@ -793,25 +789,26 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             loadTexture(R.drawable.intro_private_door, 19);
             loadTexture(R.drawable.intro_private_screw, 20);
             loadTexture(v -> {
-                int size = dp(ICON_HEIGHT_DP);
+                int size = 512;
                 Bitmap bm = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
                 try {
                     android.graphics.drawable.Drawable d = androidx.core.content.ContextCompat.getDrawable(ApplicationLoader.applicationContext, R.mipmap.ic_launcher);
                     if (d != null) {
                         Canvas c = new Canvas(bm);
+                        c.setDrawFilter(new android.graphics.PaintFlagsDrawFilter(0, Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG));
                         d.setBounds(0, 0, size, size);
                         d.draw(c);
                         return bm;
                     }
                 } catch (Throwable ignored) {}
                 Canvas c = new Canvas(bm);
-                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.FILTER_BITMAP_FLAG);
                 paint.setColor(0xFF0D1117);
                 c.drawCircle(size / 2f, size / 2f, size / 2f, paint);
                 return bm;
             }, 22);
             loadTexture(v -> {
-                int size = dp(ICON_HEIGHT_DP);
+                int size = 512;
                 return Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
             }, 21);
             loadTexture(telegramMaskProvider, 23);
