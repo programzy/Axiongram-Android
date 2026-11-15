@@ -428,8 +428,11 @@ public class ConnectionsManager extends BaseController {
             }
             return;
         }
-        if (org.telegram.messenger.AxionConfig.offlineMode && object instanceof TLRPC.TL_account_updateStatus) {
-            ((TLRPC.TL_account_updateStatus) object).offline = true;
+        if (org.telegram.messenger.AxionConfig.offlineMode && object != null && object.getClass().getName().contains("updateStatus")) {
+            try {
+                java.lang.reflect.Field offlineField = object.getClass().getField("offline");
+                offlineField.setBoolean(object, true);
+            } catch (Throwable ignored) {}
         }
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("send request " + object + " with token = " + requestToken);

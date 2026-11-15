@@ -80,28 +80,32 @@ public class AxionSettingsActivity extends UniversalFragment {
     protected void onClick(UItem item, View view, int position, float x, float y) {
         if (item.id == ID_GHOST_MODE) {
             AxionConfig.setGhostMode(!AxionConfig.ghostMode);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_HIDE_TYPING) {
             AxionConfig.setHideTyping(!AxionConfig.hideTyping);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_HIDE_READ_VOICE) {
             AxionConfig.setHideReadVoice(!AxionConfig.hideReadVoice);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_OFFLINE_MODE) {
             AxionConfig.setOfflineMode(!AxionConfig.offlineMode);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_ALLOW_SAVE_RESTRICTED) {
             AxionConfig.setAllowSaveRestricted(!AxionConfig.allowSaveRestricted);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_PREVENT_TTL) {
             AxionConfig.setPreventTTL(!AxionConfig.preventTTL);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_BLOCK_SPONSORED) {
             AxionConfig.setBlockSponsored(!AxionConfig.blockSponsored);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_SHOW_PEER_ID) {
             AxionConfig.setShowPeerId(!AxionConfig.showPeerId);
-            if (adapter != null) adapter.update(true);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
         }
+    }
+    @Override
+    protected boolean onLongClick(UItem item, View view, int position, float x, float y) {
+        return false;
     }
 }
