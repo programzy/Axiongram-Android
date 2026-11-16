@@ -134,7 +134,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         MessagesController.getGlobalMainSettings().edit().putLong("intro_crashed_time", System.currentTimeMillis()).apply();
 
         titles = new CharSequence[]{
-                null,
+                "AxionGram",
                 LocaleController.getString(R.string.Page2Title),
                 LocaleController.getString(R.string.Page3Title),
                 LocaleController.getString(R.string.Page5Title),
@@ -142,7 +142,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 LocaleController.getString(R.string.Page6Title)
         };
         messages = new String[]{
-                LocaleController.getString(R.string.Page1Message),
+                "Быстрый, приватный и безопасный мессенджер нового поколения.",
                 LocaleController.getString(R.string.Page2Message),
                 LocaleController.getString(R.string.Page3Message),
                 LocaleController.getString(R.string.Page5Message),
@@ -154,7 +154,15 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
 
     @Override
     public View createView(Context context) {
-        titles[0] = "AxionGram";
+        if (titles == null) {
+            onFragmentCreate();
+        }
+        if (titles != null && titles.length > 0) {
+            titles[0] = "AxionGram";
+        }
+        if (messages != null && messages.length > 0) {
+            messages[0] = "Быстрый, приватный и безопасный мессенджер нового поколения.";
+        }
 
 
         actionBar.setAddToContainer(false);
@@ -244,6 +252,11 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         frameLayout2 = new FrameLayout(context);
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
 
+        ImageView staticLogo = new ImageView(context);
+        staticLogo.setImageResource(R.mipmap.ic_launcher);
+        staticLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        frameLayout2.addView(staticLogo, LayoutHelper.createFrame(130, 130, Gravity.CENTER));
+
         TextureView textureView = new TextureView(context);
         frameLayout2.addView(textureView, LayoutHelper.createFrame(ICON_WIDTH_DP, ICON_HEIGHT_DP, Gravity.CENTER));
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
@@ -253,14 +266,18 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                     eglThread = new EGLThread(surface);
                     eglThread.setSurfaceTextureSize(width, height);
                     eglThread.postRunnable(()->{
-                        float time = (System.currentTimeMillis() - currentDate) / 1000.0f;
-                        Intro.setPage(currentViewPagerPage);
-                        Intro.setDate(time);
-                        Intro.onDrawFrame(0);
-                        if (eglThread != null && eglThread.isAlive() && eglThread.eglDisplay != null && eglThread.eglSurface != null) {
-                            try {
-                                eglThread.egl10.eglSwapBuffers(eglThread.eglDisplay, eglThread.eglSurface);
-                            } catch (Exception ignored) {} // If display or surface already destroyed
+                        try {
+                            float time = (System.currentTimeMillis() - currentDate) / 1000.0f;
+                            Intro.setPage(currentViewPagerPage);
+                            Intro.setDate(time);
+                            Intro.onDrawFrame(0);
+                            if (eglThread != null && eglThread.isAlive() && eglThread.eglDisplay != null && eglThread.eglSurface != null) {
+                                try {
+                                    eglThread.egl10.eglSwapBuffers(eglThread.eglDisplay, eglThread.eglSurface);
+                                } catch (Exception ignored) {} // If display or surface already destroyed
+                            }
+                        } catch (Throwable initErr) {
+                            FileLog.e(initErr);
                         }
                     });
                     eglThread.postRunnable(eglThread.drawRunnable);
@@ -310,6 +327,12 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
             @Override
             public void onPageSelected(int i) {
                 currentViewPagerPage = i;
+                try {
+                    Intro.setPage(currentViewPagerPage);
+                } catch (Throwable ignored) {}
+                if (staticLogo != null) {
+                    staticLogo.setVisibility(i == 0 ? View.VISIBLE : View.GONE);
+                }
             }
 
             @Override
@@ -656,14 +679,18 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         private long lastDrawFrame;
 
         private final GenericProvider<Void, Bitmap> telegramMaskProvider = v -> {
-            int size = dp(ICON_HEIGHT_DP);
-            Bitmap bm = Bitmap.createBitmap(dp(ICON_WIDTH_DP), size, Bitmap.Config.ARGB_8888);
-            Canvas c = new Canvas(bm);
-            c.drawColor(Theme.getColor(Theme.key_windowBackgroundWhite));
-            Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
-            c.drawCircle(bm.getWidth() / 2f, bm.getHeight() / 2f, size / 2f, paint);
-            return bm;
+            try {
+                int size = dp(ICON_HEIGHT_DP);
+                Bitmap bm = Bitmap.createBitmap(dp(ICON_WIDTH_DP), size, Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(bm);
+                c.drawColor(Theme.getColor(Theme.key_windowBackgroundWhite));
+                Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+                paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+                c.drawCircle(bm.getWidth() / 2f, bm.getHeight() / 2f, size / 2f, paint);
+                return bm;
+            } catch (Throwable e) {
+                return Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888);
+            }
         };
 
         public EGLThread(SurfaceTexture surface) {
@@ -766,7 +793,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 return false;
             }
 
-            GLES20.glGenTextures(23, textures, 0);
+            GLES20.glGenTextures(24, textures, 0);
             loadTexture(R.drawable.intro_fast_arrow_shadow, 0);
             loadTexture(R.drawable.intro_fast_arrow, 1);
             loadTexture(R.drawable.intro_fast_body, 2);
@@ -807,10 +834,7 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 c.drawCircle(size / 2f, size / 2f, size / 2f, paint);
                 return bm;
             }, 22);
-            loadTexture(v -> {
-                int size = dp(ICON_HEIGHT_DP);
-                return Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-            }, 21);
+            loadTexture(v -> Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888), 21);
             loadTexture(telegramMaskProvider, 23);
 
             updateTelegramTextures();
@@ -867,10 +891,14 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
                 }
                 int deltaDrawMs = (int) Math.min(current - lastDrawFrame, 16);
                 float time = (current - currentDate) / 1000.0f;
-                Intro.setPage(currentViewPagerPage);
-                Intro.setDate(time);
-                Intro.onDrawFrame(deltaDrawMs);
-                egl10.eglSwapBuffers(eglDisplay, eglSurface);
+                try {
+                    Intro.setPage(currentViewPagerPage);
+                    Intro.setDate(time);
+                    Intro.onDrawFrame(deltaDrawMs);
+                    egl10.eglSwapBuffers(eglDisplay, eglSurface);
+                } catch (Throwable drawErr) {
+                    FileLog.e(drawErr);
+                }
                 lastDrawFrame = current;
 
                 if (maxRefreshRate == 0) {
@@ -896,18 +924,27 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         }
 
         private void loadTexture(GenericProvider<Void, Bitmap> bitmapProvider, int index, boolean rebind) {
-            if (rebind) {
-                GLES20.glDeleteTextures(1, textures, index);
-                GLES20.glGenTextures(1, textures, index);
+            try {
+                if (rebind || textures[index] == 0) {
+                    if (rebind && textures[index] != 0) {
+                        GLES20.glDeleteTextures(1, textures, index);
+                    }
+                    GLES20.glGenTextures(1, textures, index);
+                }
+                Bitmap bm = bitmapProvider != null ? bitmapProvider.provide(null) : null;
+                if (bm == null) {
+                    bm = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888);
+                }
+                GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[index]);
+                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+                GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bm, 0);
+                bm.recycle();
+            } catch (Throwable e) {
+                FileLog.e(e);
             }
-            Bitmap bm = bitmapProvider.provide(null);
-            GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[index]);
-            GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-            GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-            GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-            GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bm, 0);
-            bm.recycle();
         }
 
         private void loadTexture(int resId, int index) {
@@ -915,31 +952,40 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         }
 
         private void loadTexture(int resId, int index, int tintColor, boolean rebind) {
-            Drawable drawable = getParentActivity().getResources().getDrawable(resId);
-            if (drawable instanceof BitmapDrawable) {
-                if (rebind) {
-                    GLES20.glDeleteTextures(1, textures, index);
-                    GLES20.glGenTextures(1, textures, index);
+            try {
+                if (getParentActivity() == null || getParentActivity().getResources() == null) {
+                    return;
                 }
+                Drawable drawable = getParentActivity().getResources().getDrawable(resId);
+                if (drawable instanceof BitmapDrawable) {
+                    if (rebind || textures[index] == 0) {
+                        if (rebind && textures[index] != 0) {
+                            GLES20.glDeleteTextures(1, textures, index);
+                        }
+                        GLES20.glGenTextures(1, textures, index);
+                    }
 
-                Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-                GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[index]);
-                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-                GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+                    Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+                    GLES20.glBindTexture(GL10.GL_TEXTURE_2D, textures[index]);
+                    GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+                    GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+                    GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+                    GLES20.glTexParameteri(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
-                if (tintColor != 0) {
-                    Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
-                    Canvas canvas = new Canvas(tempBitmap);
-                    Paint tempPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
-                    tempPaint.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
-                    canvas.drawBitmap(bitmap, 0, 0, tempPaint);
-                    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, tempBitmap, 0);
-                    tempBitmap.recycle();
-                } else {
-                    GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+                    if (tintColor != 0) {
+                        Bitmap tempBitmap = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+                        Canvas canvas = new Canvas(tempBitmap);
+                        Paint tempPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
+                        tempPaint.setColorFilter(new PorterDuffColorFilter(tintColor, PorterDuff.Mode.SRC_IN));
+                        canvas.drawBitmap(bitmap, 0, 0, tempPaint);
+                        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, tempBitmap, 0);
+                        tempBitmap.recycle();
+                    } else {
+                        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+                    }
                 }
+            } catch (Throwable e) {
+                FileLog.e(e);
             }
         }
 

@@ -31,6 +31,7 @@
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="android:windowSplashScreenAnimationDuration">@integer/splash_screen_duration</item>
         <item name="android:windowSplashScreenBackground">#0d1117</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#0d1117</item>
     </style>
 
     <style name="Theme.TMessages" parent="Theme.AppCompat.Light">
