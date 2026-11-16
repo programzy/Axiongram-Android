@@ -45,6 +45,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -252,9 +253,9 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         frameLayout2 = new FrameLayout(context);
         frameContainerView.addView(frameLayout2, LayoutHelper.createFrame(LayoutHelper.MATCH_PARENT, LayoutHelper.WRAP_CONTENT, Gravity.LEFT | Gravity.TOP, 0, 78, 0, 0));
 
-        ImageView staticLogo = new ImageView(context);
+        android.widget.ImageView staticLogo = new android.widget.ImageView(context);
         staticLogo.setImageResource(R.mipmap.ic_launcher);
-        staticLogo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        staticLogo.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
         frameLayout2.addView(staticLogo, LayoutHelper.createFrame(130, 130, Gravity.CENTER));
 
         TextureView textureView = new TextureView(context);
