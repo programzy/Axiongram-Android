@@ -1112,32 +1112,36 @@ public class EditTextBoldCursor extends EditTextEffects {
     private long lastCursorAnimTime;
 
     protected void drawCursor(Canvas canvas, GradientDrawable drawable) {
-        if (org.telegram.messenger.AxionConfig.smoothTyping && drawable != null) {
-            long now = android.os.SystemClock.elapsedRealtime();
-            float dt = Math.min((now - lastCursorAnimTime) / 1000f, 0.05f);
-            lastCursorAnimTime = now;
-            Rect b = drawable.getBounds();
-            if (animatedCursorLeft < 0 || Math.abs(animatedCursorLeft - b.left) > 300) {
-                animatedCursorLeft = b.left;
-            } else if (animatedCursorLeft != b.left) {
-                float speed = 14f;
-                animatedCursorLeft += (b.left - animatedCursorLeft) * Math.min(1.0f, dt * speed);
-                if (Math.abs(animatedCursorLeft - b.left) < 1.0f) {
+        try {
+            if (org.telegram.messenger.AxionConfig.smoothTyping && drawable != null) {
+                long now = android.os.SystemClock.elapsedRealtime();
+                float dt = Math.min((now - lastCursorAnimTime) / 1000f, 0.05f);
+                lastCursorAnimTime = now;
+                Rect b = drawable.getBounds();
+                if (animatedCursorLeft < 0 || Math.abs(animatedCursorLeft - b.left) > 300) {
                     animatedCursorLeft = b.left;
-                } else {
-                    invalidate();
+                } else if (animatedCursorLeft != b.left) {
+                    float speed = 14f;
+                    animatedCursorLeft += (b.left - animatedCursorLeft) * Math.min(1.0f, dt * speed);
+                    if (Math.abs(animatedCursorLeft - b.left) < 1.0f) {
+                        animatedCursorLeft = b.left;
+                    } else {
+                        invalidate();
+                    }
+                }
+                int diff = (int) (animatedCursorLeft - b.left);
+                if (diff != 0) {
+                    canvas.save();
+                    canvas.translate(diff, 0);
+                    drawable.draw(canvas);
+                    canvas.restore();
+                    return;
                 }
             }
-            int diff = (int) (animatedCursorLeft - b.left);
-            if (diff != 0) {
-                canvas.save();
-                canvas.translate(diff, 0);
-                drawable.draw(canvas);
-                canvas.restore();
-                return;
-            }
+        } catch (Throwable ignored) {}
+        if (drawable != null) {
+            drawable.draw(canvas);
         }
-        drawable.draw(canvas);
     }
 
     public void setWindowView(View view) {

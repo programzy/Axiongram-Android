@@ -755,6 +755,9 @@ public class EmojiThemes {
         if (themeInfo.getKey().equals("Dark Blue") && accentId == 0) {
             return;
         }
+        if (themeInfo.getKey().equals("Axion Dark") && accentId == 0) {
+            return;
+        }
 
         boolean dark = themeInfo.isDark();
         String key = dark ? "lastDarkCustomTheme" : "lastDayCustomTheme";

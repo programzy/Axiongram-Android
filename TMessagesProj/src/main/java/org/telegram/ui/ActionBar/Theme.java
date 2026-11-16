@@ -200,9 +200,10 @@ public class Theme {
         private static PatternsLoader loader;
 
         public static void createLoader(boolean force) {
-            if (loader != null && !force) {
-                return;
-            }
+            try {
+                if (loader != null && !force) {
+                    return;
+                }
             ArrayList<ThemeAccent> accentsToLoad = null;
             for (int b = 0; b < 6; b++) {
                 String key;
@@ -243,6 +244,9 @@ public class Theme {
                 }
             }
             loader = new PatternsLoader(accentsToLoad);
+            } catch (Throwable e) {
+                FileLog.e(e);
+            }
         }
 
         private PatternsLoader(ArrayList<ThemeAccent> accents) {
@@ -4286,12 +4290,11 @@ public class Theme {
                                     newAccents.add(accent);
                                     info.lastAccentId = Math.max(info.lastAccentId, accent.id);
                                 } catch (Throwable e) {
-                                    throw new RuntimeException(e);
+                                    FileLog.e(e);
                                 }
                             }
                         } catch (Throwable e) {
                             FileLog.e(e);
-                            throw new RuntimeException(e);
                         }
                     } else {
                         String key = "accent_for_" + info.assetName;

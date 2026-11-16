@@ -7636,6 +7636,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             }
             checkSystemBarColors(args.length > 2 && (boolean) args[2], true, checkNavigationBarColor && !isNavigationBarColorFrozen && !actionBarLayout.isTransitionAnimationInProgress());
         } else if (id == NotificationCenter.needSetDayNightTheme) {
+            try {
             debugInstantThemeSwitch = false;
             // theme colors never fade: a switch either plays the reveal from a point or recolors everything in one frame
             boolean instant = true;
@@ -7757,6 +7758,9 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                 if (rightActionBarLayout != null) {
                     rightActionBarLayout.animateThemedValues(theme, accentId, nightTheme, instant);
                 }
+            }
+            } catch (Throwable e) {
+                FileLog.e(e);
             }
         } else if (id == NotificationCenter.needShowPlayServicesAlert) {
             try {

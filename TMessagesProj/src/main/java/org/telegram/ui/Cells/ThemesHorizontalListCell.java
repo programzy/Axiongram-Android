@@ -742,6 +742,7 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
                 return;
             }
         }
+        try {
         if (!TextUtils.isEmpty(themeInfo.assetName)) {
             Theme.PatternsLoader.createLoader(false);
         }
@@ -774,6 +775,9 @@ public class ThemesHorizontalListCell extends RecyclerListView implements Notifi
 
         if (currentType != ThemeActivity.THEME_TYPE_NIGHT) {
             Theme.turnOffAutoNight(fragment);
+        }
+        } catch (Throwable e) {
+            FileLog.e(e);
         }
     }
 
