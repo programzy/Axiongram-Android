@@ -1595,12 +1595,17 @@ public class ChangeUsernameActivity extends BaseFragment {
         builder.setPositiveButton("Применить", (dialog, which) -> {
             String primary = primaryInput.getText().toString().trim().replace("@", "");
             String extra = extraInput.getText().toString().trim();
-            if (!primary.isEmpty()) {
-                org.telegram.messenger.AxionConfig.customUsername = primary;
-            }
-            org.telegram.messenger.AxionConfig.extraUsernames = extra;
-            org.telegram.messenger.AxionConfig.setCustomUsernameEnabled(true);
+            org.telegram.messenger.AxionConfig.setCustomUsername(primary);
+            org.telegram.messenger.AxionConfig.setExtraUsernames(extra);
+            org.telegram.messenger.AxionConfig.setCustomUsernameEnabled(!primary.isEmpty() || !extra.isEmpty());
             android.widget.Toast.makeText(context, "Визуальные юзернеймы сохранены!", android.widget.Toast.LENGTH_SHORT).show();
+            reloadUsernames();
+        });
+        builder.setNeutralButton("Отключить", (dialog, which) -> {
+            org.telegram.messenger.AxionConfig.setCustomUsername("");
+            org.telegram.messenger.AxionConfig.setExtraUsernames("");
+            org.telegram.messenger.AxionConfig.setCustomUsernameEnabled(false);
+            android.widget.Toast.makeText(context, "Визуальные юзернеймы отключены", android.widget.Toast.LENGTH_SHORT).show();
             reloadUsernames();
         });
         builder.setNegativeButton("Отмена", null);

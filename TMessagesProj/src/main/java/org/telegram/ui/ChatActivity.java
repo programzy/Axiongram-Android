@@ -3997,7 +3997,23 @@ public class ChatActivity extends BaseFragment implements
                     }
                 } else if (id == call || id == video_call) {
                     if (currentUser != null && getParentActivity() != null) {
-                        VoIPHelper.startCall(currentUser, id == video_call, userInfo != null && userInfo.video_calls_available, getParentActivity(), getMessagesController().getUserFull(currentUser.id), getAccountInstance());
+                        if (org.telegram.messenger.AxionConfig.confirmCall) {
+                            final boolean isVideo = (id == video_call);
+                            final org.telegram.tgnet.TLRPC.User targetUser = currentUser;
+                            final org.telegram.tgnet.TLRPC.UserFull targetUserFull = (userInfo != null ? getMessagesController().getUserFull(targetUser.id) : null);
+                            final boolean canVideo = (userInfo != null && userInfo.video_calls_available);
+                            org.telegram.ui.ActionBar.AlertDialog.Builder builder = new org.telegram.ui.ActionBar.AlertDialog.Builder(getParentActivity());
+                            String name = org.telegram.messenger.UserObject.getUserName(targetUser);
+                            builder.setTitle(isVideo ? "Видеозвонок" : "Звонок");
+                            builder.setMessage((isVideo ? "Начать видеозвонок с " : "Позвонить ") + name + "?");
+                            builder.setPositiveButton("Позвонить", (dialog, which) -> {
+                                VoIPHelper.startCall(targetUser, isVideo, canVideo, getParentActivity(), targetUserFull, getAccountInstance());
+                            });
+                            builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+                            showDialog(builder.create());
+                        } else {
+                            VoIPHelper.startCall(currentUser, id == video_call, userInfo != null && userInfo.video_calls_available, getParentActivity(), getMessagesController().getUserFull(currentUser.id), getAccountInstance());
+                        }
                     }
                 } else if (id == change_colors) {
                     showChatThemeBottomSheet();

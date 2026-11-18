@@ -253,21 +253,29 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
         textureView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
-                if (eglThread == null && surface != null) {
-                    eglThread = new EGLThread(surface);
-                    eglThread.setSurfaceTextureSize(width, height);
-                    eglThread.postRunnable(()->{
-                        float time = (System.currentTimeMillis() - currentDate) / 1000.0f;
-                        Intro.setPage(currentViewPagerPage);
-                        Intro.setDate(time);
-                        Intro.onDrawFrame(0);
-                        if (eglThread != null && eglThread.isAlive() && eglThread.eglDisplay != null && eglThread.eglSurface != null) {
+                try {
+                    if (eglThread == null && surface != null) {
+                        eglThread = new EGLThread(surface);
+                        eglThread.setSurfaceTextureSize(width, height);
+                        eglThread.postRunnable(()->{
                             try {
-                                eglThread.egl10.eglSwapBuffers(eglThread.eglDisplay, eglThread.eglSurface);
-                            } catch (Exception ignored) {} // If display or surface already destroyed
-                        }
-                    });
-                    eglThread.postRunnable(eglThread.drawRunnable);
+                                float time = (System.currentTimeMillis() - currentDate) / 1000.0f;
+                                Intro.setPage(currentViewPagerPage);
+                                Intro.setDate(time);
+                                Intro.onDrawFrame(0);
+                                if (eglThread != null && eglThread.isAlive() && eglThread.eglDisplay != null && eglThread.eglSurface != null) {
+                                    try {
+                                        eglThread.egl10.eglSwapBuffers(eglThread.eglDisplay, eglThread.eglSurface);
+                                    } catch (Exception ignored) {} // If display or surface already destroyed
+                                }
+                            } catch (Throwable t) {
+                                org.telegram.messenger.FileLog.e(t);
+                            }
+                        });
+                        eglThread.postRunnable(eglThread.drawRunnable);
+                    }
+                } catch (Throwable t) {
+                    org.telegram.messenger.FileLog.e(t);
                 }
             }
 
@@ -551,9 +559,13 @@ public class IntroActivity extends BaseFragment implements NotificationCenter.No
     @Override
     public AnimatorSet onCustomTransitionAnimation(boolean isOpen, Runnable callback) {
         if (isOnLogout) {
-            AnimatorSet set = new AnimatorSet().setDuration(50);
-            set.playTogether(ValueAnimator.ofFloat());
-            return set;
+            try {
+                AnimatorSet set = new AnimatorSet().setDuration(50);
+                set.playTogether(ValueAnimator.ofFloat(0.0f, 1.0f));
+                return set;
+            } catch (Throwable e) {
+                return null;
+            }
         }
         return null;
     }

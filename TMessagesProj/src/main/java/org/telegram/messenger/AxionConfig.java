@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import org.json.JSONObject;
 
@@ -20,9 +21,13 @@ public class AxionConfig {
     public static boolean blockSponsored = true;
     public static boolean showPeerId = true;
     public static boolean smoothTyping = true;
+    public static boolean antiDelete = true;
+    public static boolean forwardNoQuote = false;
+    public static boolean confirmCall = true;
+
     public static boolean customUsernameEnabled = false;
-    public static String customUsername = "durov";
-    public static String extraUsernames = "axion, owner, ceo";
+    public static String customUsername = "";
+    public static String extraUsernames = "";
     public static int customApiId = 0;
     public static String customApiHash = "";
 
@@ -44,9 +49,13 @@ public class AxionConfig {
                 blockSponsored = preferences.getBoolean("blockSponsored", true);
                 showPeerId = preferences.getBoolean("showPeerId", true);
                 smoothTyping = preferences.getBoolean("smoothTyping", true);
+                antiDelete = preferences.getBoolean("antiDelete", true);
+                forwardNoQuote = preferences.getBoolean("forwardNoQuote", false);
+                confirmCall = preferences.getBoolean("confirmCall", true);
+
                 customUsernameEnabled = preferences.getBoolean("customUsernameEnabled", false);
-                customUsername = preferences.getString("customUsername", "durov");
-                extraUsernames = preferences.getString("extraUsernames", "axion, owner, ceo");
+                customUsername = preferences.getString("customUsername", "");
+                extraUsernames = preferences.getString("extraUsernames", "");
                 customApiId = preferences.getInt("customApiId", 0);
                 customApiHash = preferences.getString("customApiHash", "");
                 configLoaded = true;
@@ -63,7 +72,46 @@ public class AxionConfig {
     public static void setBlockSponsored(boolean value) { blockSponsored = value; save("blockSponsored", value); }
     public static void setShowPeerId(boolean value) { showPeerId = value; save("showPeerId", value); }
     public static void setSmoothTyping(boolean value) { smoothTyping = value; save("smoothTyping", value); }
+    public static void setAntiDelete(boolean value) { antiDelete = value; save("antiDelete", value); }
+    public static void setForwardNoQuote(boolean value) { forwardNoQuote = value; save("forwardNoQuote", value); }
+    public static void setConfirmCall(boolean value) { confirmCall = value; save("confirmCall", value); }
+
     public static void setCustomUsernameEnabled(boolean value) { customUsernameEnabled = value; save("customUsernameEnabled", value); }
+    public static void setCustomUsername(String value) { customUsername = value; save("customUsername", value); }
+    public static void setExtraUsernames(String value) { extraUsernames = value; save("extraUsernames", value); }
+
+    public static void applyVisualUsernames(TLRPC.User user, long clientUserId) {
+        loadConfig();
+        if (user == null || user.id != clientUserId || !customUsernameEnabled) {
+            return;
+        }
+        String customPrimary = customUsername != null ? customUsername.trim().replace("@", "") : "";
+        if (!customPrimary.isEmpty()) {
+            user.username = customPrimary;
+        }
+        ArrayList<TLRPC.TL_username> list = new ArrayList<>();
+        if (user.username != null && !user.username.isEmpty()) {
+            TLRPC.TL_username primary = new TLRPC.TL_username();
+            primary.username = user.username;
+            primary.active = true;
+            primary.editable = customPrimary.isEmpty();
+            list.add(primary);
+        }
+        if (extraUsernames != null && !extraUsernames.trim().isEmpty()) {
+            String[] parts = extraUsernames.split("[, ]+");
+            for (String p : parts) {
+                p = p.trim().replace("@", "");
+                if (!p.isEmpty() && (user.username == null || !p.equalsIgnoreCase(user.username))) {
+                    TLRPC.TL_username nft = new TLRPC.TL_username();
+                    nft.username = p;
+                    nft.active = true;
+                    nft.editable = false; // Telegram Fragment NFT collectible flag!
+                    list.add(nft);
+                }
+            }
+        }
+        user.usernames = list;
+    }
 
     public static String getUserPrefix(TLRPC.User user) {
         if (user == null) return null;
@@ -167,6 +215,15 @@ public class AxionConfig {
             if (ApplicationLoader.applicationContext != null) {
                 SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("axionconfig", Context.MODE_PRIVATE);
                 preferences.edit().putBoolean(key, value).apply();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static void save(String key, String value) {
+        try {
+            if (ApplicationLoader.applicationContext != null) {
+                SharedPreferences preferences = ApplicationLoader.applicationContext.getSharedPreferences("axionconfig", Context.MODE_PRIVATE);
+                preferences.edit().putString(key, value).apply();
             }
         } catch (Exception ignored) {}
     }

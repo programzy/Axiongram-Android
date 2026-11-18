@@ -4645,6 +4645,20 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
             @Override
             public boolean onItemClick(View view, int position) {
+                if (position == usernameRow || position == setUsernameRow) {
+                    long targetId = userId != 0 ? userId : (dialogId != 0 ? dialogId : getUserConfig().getClientUserId());
+                    if (org.telegram.messenger.AxionConfig.showPeerId && targetId != 0) {
+                        try {
+                            android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
+                            android.content.ClipData clip = android.content.ClipData.newPlainText("user_id", String.valueOf(targetId));
+                            clipboard.setPrimaryClip(clip);
+                            try {
+                                BulletinFactory.of(ProfileActivity.this).createCopyBulletin("ID скопирован в буфер обмена").show();
+                            } catch (Throwable ignored2) {}
+                            return true;
+                        } catch (Throwable ignored) {}
+                    }
+                }
                 if (position == versionRow) {
                     pressCount++;
                     if (pressCount >= 2 || BuildVars.DEBUG_PRIVATE_VERSION) {
@@ -7436,19 +7450,6 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
 
     private boolean processOnClickOrPress(final int position, final View view, final float x, final float y) {
         if (position == usernameRow || position == setUsernameRow) {
-            long targetId = userId != 0 ? userId : (dialogId != 0 ? dialogId : getUserConfig().getClientUserId());
-            if (org.telegram.messenger.AxionConfig.showPeerId && targetId != 0) {
-                try {
-                    android.content.ClipboardManager clipboard = (android.content.ClipboardManager) ApplicationLoader.applicationContext.getSystemService(Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("user_id", String.valueOf(targetId));
-                    clipboard.setPrimaryClip(clip);
-                    android.widget.Toast.makeText(ApplicationLoader.applicationContext, "ID скопирован: " + targetId, android.widget.Toast.LENGTH_SHORT).show();
-                    try {
-                        BulletinFactory.of(ProfileActivity.this).createCopyBulletin("ID скопирован в буфер обмена").show();
-                    } catch (Throwable ignored2) {}
-                    return true;
-                } catch (Throwable ignored) {}
-            }
             final String username;
             final TLRPC.TL_username usernameObj;
             if (userId != 0) {
@@ -13730,7 +13731,12 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                             }
                             value = LocaleController.getString(R.string.Username);
                             if (user != null && user.id == getUserConfig().getClientUserId() && org.telegram.messenger.AxionConfig.customUsernameEnabled) {
-                                username = org.telegram.messenger.AxionConfig.customUsername;
+                                org.telegram.messenger.AxionConfig.applyVisualUsernames(user, getUserConfig().getClientUserId());
+                                if (org.telegram.messenger.AxionConfig.customUsername != null && !org.telegram.messenger.AxionConfig.customUsername.isEmpty()) {
+                                    username = org.telegram.messenger.AxionConfig.customUsername;
+                                }
+                                usernames.clear();
+                                usernames.addAll(user.usernames);
                             }
                             if (username != null) {
                                 SpannableStringBuilder ssb = new SpannableStringBuilder("@" + username);
@@ -13789,6 +13795,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                         detailCell.setContentDescriptionValueFirst(false);
                     } else if (position == setUsernameRow) {
                         TLRPC.User user = UserConfig.getInstance(currentAccount).getCurrentUser();
+                        org.telegram.messenger.AxionConfig.applyVisualUsernames(user, getUserConfig().getClientUserId());
                         String text = "";
                         CharSequence value = LocaleController.getString(R.string.Username);
                         String username = null;
@@ -14442,7 +14449,30 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
                                 }
                                 FragmentUsernameBottomSheet.open(getContext(), FragmentUsernameBottomSheet.TYPE_USERNAME, usernameObj.username, obj, (TL_fragment.TL_collectibleInfo) res, getResourceProvider());
                             } else {
-                                BulletinFactory.showError(err);
+                                if (getContext() != null) {
+                                    try {
+                                        TLObject obj = userId != 0 ? getMessagesController().getUser(userId) : getMessagesController().getChat(chatId);
+                                        if (obj == null) obj = UserConfig.getInstance(currentAccount).getCurrentUser();
+                                        TL_fragment.TL_collectibleInfo fakeInfo = new TL_fragment.TL_collectibleInfo();
+                                        fakeInfo.purchase_date = (int) (System.currentTimeMillis() / 1000L) - 86400 * 42;
+                                        fakeInfo.currency = "USD";
+                                        int uLen = usernameObj.username != null ? usernameObj.username.length() : 5;
+                                        long tonAmt = uLen <= 4 ? 1500L : (uLen == 5 ? 450L : 120L);
+                                        fakeInfo.crypto_currency = "TON";
+                                        fakeInfo.crypto_amount = tonAmt * 1000000000L;
+                                        fakeInfo.amount = tonAmt * 550L;
+                                        fakeInfo.url = "https://fragment.com/username/" + usernameObj.username;
+                                        FragmentUsernameBottomSheet.open(getContext(), FragmentUsernameBottomSheet.TYPE_USERNAME, usernameObj.username, obj, fakeInfo, getResourceProvider());
+                                    } catch (Throwable ignored) {
+                                        try {
+                                            BulletinFactory.of(ProfileActivity.this).createImageBulletin(R.drawable.filled_username, "Коллекционный юзернейм @" + usernameObj.username + " (Fragment NFT)").show();
+                                        } catch (Throwable ignored2) {
+                                            BulletinFactory.showError(err);
+                                        }
+                                    }
+                                } else {
+                                    BulletinFactory.showError(err);
+                                }
                             }
                         }));
                         getConnectionsManager().bindRequestToGuid(reqId, getClassGuid());

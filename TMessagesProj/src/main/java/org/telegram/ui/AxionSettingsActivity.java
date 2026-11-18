@@ -2,7 +2,14 @@ package org.telegram.ui;
 
 import android.content.Context;
 import android.view.View;
+import org.telegram.messenger.AndroidUtilities;
 import org.telegram.messenger.AxionConfig;
+import org.telegram.messenger.LocaleController;
+import org.telegram.messenger.R;
+import org.telegram.ui.ActionBar.AlertDialog;
+import org.telegram.ui.ActionBar.Theme;
+import org.telegram.ui.Components.EditTextBoldCursor;
+import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.UItem;
 import org.telegram.ui.Components.UniversalAdapter;
@@ -20,7 +27,10 @@ public class AxionSettingsActivity extends UniversalFragment {
     private static final int ID_BLOCK_SPONSORED = 7;
     private static final int ID_SHOW_PEER_ID = 8;
     private static final int ID_SMOOTH_TYPING = 9;
-    private static final int ID_CUSTOM_USERNAME = 10;
+    private static final int ID_ANTI_DELETE = 10;
+    private static final int ID_FORWARD_NO_QUOTE = 11;
+    private static final int ID_CONFIRM_CALL = 12;
+    private static final int ID_CUSTOM_USERNAME = 13;
 
     @Override
     protected boolean useSimpleActionBar() {
@@ -72,6 +82,19 @@ public class AxionSettingsActivity extends UniversalFragment {
                 .setChecked(AxionConfig.offlineMode));
         items.add(UItem.asShadow("Устанавливает статус «был в сети недавно», скрывая вашу онлайн-активность."));
 
+        items.add(UItem.asHeader("Чаты и сообщения"));
+        items.add(UItem.asCheck(ID_ANTI_DELETE, "Защита от удаления сообщений")
+                .setChecked(AxionConfig.antiDelete));
+        items.add(UItem.asShadow("Удаленные собеседником сообщения остаются в вашей переписке."));
+
+        items.add(UItem.asCheck(ID_FORWARD_NO_QUOTE, "Пересылка без авторства (Clean Forward)")
+                .setChecked(AxionConfig.forwardNoQuote));
+        items.add(UItem.asShadow("Пересылает любые сообщения без плашки «Переслано от...»."));
+
+        items.add(UItem.asCheck(ID_CONFIRM_CALL, "Подтверждение перед звонком")
+                .setChecked(AxionConfig.confirmCall));
+        items.add(UItem.asShadow("Показывает диалог подтверждения перед началом голосового или видеозвонка."));
+
         items.add(UItem.asHeader("Защита контента и интерфейс"));
         items.add(UItem.asCheck(ID_ALLOW_SAVE_RESTRICTED, "Разрешить скриншоты и сохранение")
                 .setChecked(AxionConfig.allowSaveRestricted));
@@ -87,17 +110,21 @@ public class AxionSettingsActivity extends UniversalFragment {
 
         items.add(UItem.asCheck(ID_SHOW_PEER_ID, "Отображать ID пользователя / чата")
                 .setChecked(AxionConfig.showPeerId));
-        items.add(UItem.asShadow("Показывает точный Telegram ID в профилях пользователей и чатов. Клик по строке ID копирует его в буфер обмена."));
+        items.add(UItem.asShadow("Показывает точный Telegram ID в профилях пользователей и чатов. Долгое зажатие копирует ID."));
 
-        items.add(UItem.asHeader("Плавность и кастомизация"));
+        items.add(UItem.asHeader("Кастомизация профиля и экран"));
         items.add(UItem.asCheck(ID_SMOOTH_TYPING, "Плавный набор текста и 90/120 FPS")
                 .setChecked(AxionConfig.smoothTyping));
-        items.add(UItem.asShadow("Включает принудительную повышенную частоту обновления экрана (до 120 Гц) при наборе текста, устраняя лаги клавиатуры."));
+        items.add(UItem.asShadow("Включает принудительную повышенную частоту обновления экрана при наборе текста."));
 
-        items.add(UItem.asCheck(ID_CUSTOM_USERNAME, "Визуальный юзернейм (@durov)")
-                .setChecked(AxionConfig.customUsernameEnabled));
-        items.add(UItem.asShadow("Отображает в вашем профиле юзернейм @durov и коллекционные Fragment-юзернеймы."));
-        items.add(UItem.asShadow(null));
+        String unVal = AxionConfig.customUsernameEnabled ?
+            (AxionConfig.customUsername.isEmpty() ? "Вкл" : ("@" + AxionConfig.customUsername)) : "Выкл";
+        String unDesc = AxionConfig.customUsernameEnabled ? 
+            ("Активно: @" + (AxionConfig.customUsername.isEmpty() ? "не задан" : AxionConfig.customUsername) + 
+            (AxionConfig.extraUsernames.isEmpty() ? "" : (" + Fragment NFT: " + AxionConfig.extraUsernames))) : 
+            "Нажмите для настройки визуального никнейма и коллекционных Fragment NFT юзернеймов.";
+        items.add(UItem.asButton(ID_CUSTOM_USERNAME, "Визуальные и Fragment NFT юзернеймы", unVal));
+        items.add(UItem.asShadow(unDesc));
     }
 
     @Override
@@ -129,10 +156,65 @@ public class AxionSettingsActivity extends UniversalFragment {
         } else if (item.id == ID_SMOOTH_TYPING) {
             AxionConfig.setSmoothTyping(!AxionConfig.smoothTyping);
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
-        } else if (item.id == ID_CUSTOM_USERNAME) {
-            AxionConfig.setCustomUsernameEnabled(!AxionConfig.customUsernameEnabled);
+        } else if (item.id == ID_ANTI_DELETE) {
+            AxionConfig.setAntiDelete(!AxionConfig.antiDelete);
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_FORWARD_NO_QUOTE) {
+            AxionConfig.setForwardNoQuote(!AxionConfig.forwardNoQuote);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_CONFIRM_CALL) {
+            AxionConfig.setConfirmCall(!AxionConfig.confirmCall);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_CUSTOM_USERNAME) {
+            showVisualUsernamesDialog();
         }
+    }
+
+    private void showVisualUsernamesDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, getResourceProvider());
+        builder.setTitle("✨ Визуальные и Fragment NFT юзернеймы");
+
+        android.widget.LinearLayout layout = new android.widget.LinearLayout(context);
+        layout.setOrientation(android.widget.LinearLayout.VERTICAL);
+        layout.setPadding(AndroidUtilities.dp(24), AndroidUtilities.dp(12), AndroidUtilities.dp(24), AndroidUtilities.dp(8));
+
+        android.widget.TextView info = new android.widget.TextView(context);
+        info.setText("Задайте визуальный основной юзернейм и коллекционные Fragment NFT юзернеймы, отображаемые в вашем профиле.");
+        info.setTextColor(Theme.getColor(Theme.key_windowBackgroundWhiteGrayText4, getResourceProvider()));
+        info.setTextSize(14);
+        layout.addView(info);
+
+        final EditTextBoldCursor primaryInput = new EditTextBoldCursor(context);
+        primaryInput.setHint("Основной юзернейм (например durov)");
+        primaryInput.setText(AxionConfig.customUsername);
+        layout.addView(primaryInput);
+
+        final EditTextBoldCursor extraInput = new EditTextBoldCursor(context);
+        extraInput.setHint("Коллекционные Fragment NFT (через запятую: nft, ton, owner)");
+        extraInput.setText(AxionConfig.extraUsernames);
+        layout.addView(extraInput);
+
+        builder.setView(layout);
+        builder.setPositiveButton("Применить", (dialog, which) -> {
+            String primary = primaryInput.getText().toString().trim().replace("@", "");
+            String extra = extraInput.getText().toString().trim();
+            AxionConfig.setCustomUsername(primary);
+            AxionConfig.setExtraUsernames(extra);
+            AxionConfig.setCustomUsernameEnabled(!primary.isEmpty() || !extra.isEmpty());
+            android.widget.Toast.makeText(context, "Визуальные юзернеймы сохранены!", android.widget.Toast.LENGTH_SHORT).show();
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        });
+        builder.setNeutralButton("Отключить", (dialog, which) -> {
+            AxionConfig.setCustomUsername("");
+            AxionConfig.setExtraUsernames("");
+            AxionConfig.setCustomUsernameEnabled(false);
+            android.widget.Toast.makeText(context, "Визуальные юзернеймы отключены", android.widget.Toast.LENGTH_SHORT).show();
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        });
+        builder.setNegativeButton("Отмена", null);
+        showDialog(builder.create());
     }
 
     @Override
