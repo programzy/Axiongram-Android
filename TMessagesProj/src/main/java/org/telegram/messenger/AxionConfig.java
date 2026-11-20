@@ -24,6 +24,7 @@ public class AxionConfig {
     public static boolean antiDelete = true;
     public static boolean forwardNoQuote = false;
     public static boolean confirmCall = true;
+    public static boolean localPremium = true;
 
     public static boolean customUsernameEnabled = false;
     public static String customUsername = "";
@@ -52,6 +53,7 @@ public class AxionConfig {
                 antiDelete = preferences.getBoolean("antiDelete", true);
                 forwardNoQuote = preferences.getBoolean("forwardNoQuote", false);
                 confirmCall = preferences.getBoolean("confirmCall", true);
+                localPremium = preferences.getBoolean("localPremium", true);
 
                 customUsernameEnabled = preferences.getBoolean("customUsernameEnabled", false);
                 customUsername = preferences.getString("customUsername", "");
@@ -75,6 +77,7 @@ public class AxionConfig {
     public static void setAntiDelete(boolean value) { antiDelete = value; save("antiDelete", value); }
     public static void setForwardNoQuote(boolean value) { forwardNoQuote = value; save("forwardNoQuote", value); }
     public static void setConfirmCall(boolean value) { confirmCall = value; save("confirmCall", value); }
+    public static void setLocalPremium(boolean value) { localPremium = value; save("localPremium", value); }
 
     public static void setCustomUsernameEnabled(boolean value) { customUsernameEnabled = value; save("customUsernameEnabled", value); }
     public static void setCustomUsername(String value) { customUsername = value; save("customUsername", value); }
@@ -186,7 +189,9 @@ public class AxionConfig {
         String className = obj.getClass().getSimpleName();
         if (ghostMode) {
             if (className.equals("TL_messages_readHistory") ||
-                className.equals("TL_channels_readHistory")) {
+                className.equals("TL_channels_readHistory") ||
+                className.equals("TL_messages_readDiscussion") ||
+                className.equals("TL_messages_readEncryptedHistory")) {
                 return true;
             }
         }

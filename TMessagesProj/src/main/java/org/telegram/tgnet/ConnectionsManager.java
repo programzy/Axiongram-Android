@@ -420,37 +420,96 @@ public class ConnectionsManager extends BaseController {
     }
 
     private void sendRequestInternal(TLObject object, RequestDelegate onComplete, RequestDelegateTimestamp onCompleteTimestamp, QuickAckDelegate onQuickAck, WriteToSocketDelegate onWriteToSocket, int flags, int datacenterId, int connectionType, boolean immediate, int requestToken) {
-        if (org.telegram.messenger.AxionConfig.shouldFilterRequest(object)) {
+        if (object == null) {
+            return;
+        }
+
+        // 1. Hide typing / upload status: simply return WITHOUT running onComplete (proven AyuGram model)
+        if (org.telegram.messenger.AxionConfig.hideTyping && (
+                object instanceof TLRPC.TL_messages_setTyping ||
+                object instanceof TLRPC.TL_messages_setEncryptedTyping ||
+                object.getClass().getSimpleName().equals("TL_messages_setTyping") ||
+                object.getClass().getSimpleName().equals("TL_messages_setEncryptedTyping")
+        )) {
+            return;
+        }
+
+        // 2. Offline mode: mark status packet as offline
+        if (org.telegram.messenger.AxionConfig.offlineMode && (
+                object instanceof TLRPC.TL_account_updateStatus ||
+                object.getClass().getSimpleName().contains("updateStatus")
+        )) {
+            try {
+                if (object instanceof TLRPC.TL_account_updateStatus) {
+                    ((TLRPC.TL_account_updateStatus) object).offline = true;
+                } else {
+                    java.lang.reflect.Field f = object.getClass().getField("offline");
+                    f.setBoolean(object, true);
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // 3. Ghost mode: suppress readHistory / readDiscussion / readMessageContents safely
+        if (org.telegram.messenger.AxionConfig.ghostMode && (
+                object instanceof TLRPC.TL_messages_readHistory ||
+                object instanceof TLRPC.TL_messages_readEncryptedHistory ||
+                object instanceof TLRPC.TL_messages_readDiscussion ||
+                object instanceof TLRPC.TL_channels_readHistory ||
+                object instanceof TLRPC.TL_messages_readMessageContents ||
+                object instanceof TLRPC.TL_channels_readMessageContents ||
+                object.getClass().getSimpleName().contains("readHistory") ||
+                object.getClass().getSimpleName().contains("readDiscussion")
+        )) {
             if (onComplete != null) {
-                String className = object != null ? object.getClass().getSimpleName() : "";
                 try {
-                    if (className.contains("Sponsored") || className.contains("sponsored")) {
-                        TLRPC.TL_messages_sponsoredMessages empty = new TLRPC.TL_messages_sponsoredMessages();
-                        empty.messages = new java.util.ArrayList<>();
-                        empty.chats = new java.util.ArrayList<>();
-                        empty.users = new java.util.ArrayList<>();
-                        onComplete.run(empty, null);
-                    } else if (className.contains("readHistory") || className.contains("readMessageContents")) {
-                        TLRPC.TL_messages_affectedMessages affected = new TLRPC.TL_messages_affectedMessages();
-                        affected.pts = 0;
-                        affected.pts_count = 0;
-                        onComplete.run(affected, null);
+                    if (object instanceof TLRPC.TL_messages_readDiscussion || object.getClass().getSimpleName().contains("readDiscussion")) {
+                        onComplete.run(new TLRPC.TL_boolTrue(), null);
                     } else {
-                        TLRPC.TL_error err = new TLRPC.TL_error();
-                        err.code = 400;
-                        err.text = "FILTERED";
-                        onComplete.run(null, err);
+                        TLRPC.TL_messages_affectedMessages fakeRes = new TLRPC.TL_messages_affectedMessages();
+                        fakeRes.pts = -1; // -1 ensures processNewDifferenceParams does not desynchronize PTS!
+                        fakeRes.pts_count = 0;
+                        onComplete.run(fakeRes, null);
                     }
                 } catch (Throwable ignored) {}
             }
             return;
         }
-        if (org.telegram.messenger.AxionConfig.offlineMode && object != null && object.getClass().getName().contains("updateStatus")) {
-            try {
-                java.lang.reflect.Field offlineField = object.getClass().getField("offline");
-                offlineField.setBoolean(object, true);
-            } catch (Throwable ignored) {}
+
+        // 4. Hide voice/video listening receipts
+        if (org.telegram.messenger.AxionConfig.hideReadVoice && (
+                object instanceof TLRPC.TL_messages_readMessageContents ||
+                object instanceof TLRPC.TL_channels_readMessageContents ||
+                object.getClass().getSimpleName().contains("readMessageContents")
+        )) {
+            if (onComplete != null) {
+                try {
+                    TLRPC.TL_messages_affectedMessages fakeRes = new TLRPC.TL_messages_affectedMessages();
+                    fakeRes.pts = -1;
+                    fakeRes.pts_count = 0;
+                    onComplete.run(fakeRes, null);
+                } catch (Throwable ignored) {}
+            }
+            return;
         }
+
+        // 5. Block sponsored messages
+        if (org.telegram.messenger.AxionConfig.blockSponsored && (
+                object instanceof TLRPC.TL_messages_getSponsoredMessages ||
+                object.getClass().getSimpleName().contains("Sponsored") ||
+                object.getClass().getSimpleName().contains("sponsored")
+        )) {
+            if (onComplete != null) {
+                try {
+                    TLRPC.TL_messages_sponsoredMessages empty = new TLRPC.TL_messages_sponsoredMessages();
+                    empty.messages = new java.util.ArrayList<>();
+                    empty.chats = new java.util.ArrayList<>();
+                    empty.users = new java.util.ArrayList<>();
+                    onComplete.run(empty, null);
+                } catch (Throwable ignored) {}
+            }
+            return;
+        }
+
         if (BuildVars.LOGS_ENABLED) {
             FileLog.d("send request " + object + " with token = " + requestToken);
         }
@@ -645,6 +704,9 @@ public class ConnectionsManager extends BaseController {
     }
 
     public void cancelRequest(int token, boolean notifyServer, Runnable onCancelled) {
+        if (token <= 0) {
+            return;
+        }
         Utilities.stageQueue.postRunnable(() -> {
             if (onCancelled != null) {
                 listenCancel(token, () -> {
@@ -666,7 +728,7 @@ public class ConnectionsManager extends BaseController {
     }
 
     public void bindRequestToGuid(int requestToken, int guid) {
-        if (guid == 0) {
+        if (requestToken <= 0 || guid == 0) {
             return;
         }
         native_bindRequestToGuid(currentAccount, requestToken, guid);

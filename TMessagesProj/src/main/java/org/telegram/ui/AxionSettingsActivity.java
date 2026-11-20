@@ -31,6 +31,7 @@ public class AxionSettingsActivity extends UniversalFragment {
     private static final int ID_FORWARD_NO_QUOTE = 11;
     private static final int ID_CONFIRM_CALL = 12;
     private static final int ID_CUSTOM_USERNAME = 13;
+    private static final int ID_LOCAL_PREMIUM = 14;
 
     @Override
     protected boolean useSimpleActionBar() {
@@ -112,6 +113,11 @@ public class AxionSettingsActivity extends UniversalFragment {
                 .setChecked(AxionConfig.showPeerId));
         items.add(UItem.asShadow("Показывает точный Telegram ID в профилях пользователей и чатов. Долгое зажатие копирует ID."));
 
+        items.add(UItem.asHeader("Telegram Premium"));
+        items.add(UItem.asCheck(ID_LOCAL_PREMIUM, "Локальный Telegram Premium")
+                .setChecked(AxionConfig.localPremium));
+        items.add(UItem.asShadow("Активирует премиум-статус клиента: звезда в профиле, кастомные эмодзи и реакции, расшифровка голосовых (Speech-to-Text), удвоенные лимиты чатов и папок, эксклюзивные иконки приложения."));
+
         items.add(UItem.asHeader("Кастомизация профиля и экран"));
         items.add(UItem.asCheck(ID_SMOOTH_TYPING, "Плавный набор текста и 90/120 FPS")
                 .setChecked(AxionConfig.smoothTyping));
@@ -164,6 +170,14 @@ public class AxionSettingsActivity extends UniversalFragment {
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_CONFIRM_CALL) {
             AxionConfig.setConfirmCall(!AxionConfig.confirmCall);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_LOCAL_PREMIUM) {
+            AxionConfig.setLocalPremium(!AxionConfig.localPremium);
+            if (getUserConfig().getCurrentUser() != null) {
+                getUserConfig().getCurrentUser().premium = AxionConfig.localPremium;
+            }
+            getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.currentUserPremiumStatusChanged);
+            org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.premiumStatusChangedGlobal);
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_CUSTOM_USERNAME) {
             showVisualUsernamesDialog();

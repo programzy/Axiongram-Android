@@ -255,6 +255,9 @@ public class UserConfig extends BaseController {
 
     public TLRPC.User getCurrentUser() {
         synchronized (sync) {
+            if (currentUser != null && org.telegram.messenger.AxionConfig.localPremium) {
+                currentUser.premium = true;
+            }
             return currentUser;
         }
     }
@@ -573,6 +576,9 @@ public class UserConfig extends BaseController {
     }
 
     public boolean isPremium() {
+        if (org.telegram.messenger.AxionConfig.localPremium) {
+            return true;
+        }
         TLRPC.User user = currentUser;
         if (user == null) {
             return false;

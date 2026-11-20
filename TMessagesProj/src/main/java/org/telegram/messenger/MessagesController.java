@@ -913,7 +913,7 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public int getChatReactionsCount() {
-        return getUserConfig().isPremium() ? reactionsInChatMax : 1;
+        return (getUserConfig().isPremium() || org.telegram.messenger.AxionConfig.localPremium) ? reactionsInChatMax : 1;
     }
 
     public int getChatMaxUniqReactions(long dialogId) {
@@ -925,11 +925,17 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public boolean isPremiumUser(TLRPC.User currentUser) {
-        return currentUser != null && currentUser.premium && !isSupportUser(currentUser);
+        if (currentUser == null) {
+            return false;
+        }
+        if (org.telegram.messenger.AxionConfig.localPremium && currentUser.id == getUserConfig().getClientUserId()) {
+            return !isSupportUser(currentUser);
+        }
+        return currentUser.premium && !isSupportUser(currentUser);
     }
 
     public boolean didPressTranscribeButtonEnough() {
-        return transcribeButtonPressed >= 2;
+        return org.telegram.messenger.AxionConfig.localPremium || transcribeButtonPressed >= 2;
     }
 
     public void pressTranscribeButton() {
@@ -6705,10 +6711,14 @@ public class MessagesController extends BaseController implements NotificationCe
     }
 
     public TLRPC.User getUser(Long id) {
-        if (id == 0) {
+        if (id == null || id == 0) {
             return UserConfig.getInstance(currentAccount).getCurrentUser();
         }
-        return users.get(id);
+        TLRPC.User user = users.get(id);
+        if (user != null && org.telegram.messenger.AxionConfig.localPremium && user.id == getUserConfig().getClientUserId()) {
+            user.premium = true;
+        }
+        return user;
     }
 
     public TLObject getUserOrChat(long dialogId) {
@@ -6831,6 +6841,9 @@ public class MessagesController extends BaseController implements NotificationCe
     public boolean putUser(TLRPC.User user, boolean fromCache, boolean force) {
         if (user == null) {
             return false;
+        }
+        if (org.telegram.messenger.AxionConfig.localPremium && user.id == getUserConfig().getClientUserId()) {
+            user.premium = true;
         }
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
         TLRPC.User oldUser = users.get(user.id);
