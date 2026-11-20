@@ -1255,6 +1255,8 @@ public class ChatActivity extends BaseFragment implements
     public final static int OPTION_SAVE_TO_DOWNLOADS_OR_MUSIC = 10;
     public final static int OPTION_ADD_TO_GIFS = 11;
     public final static int OPTION_EDIT = 12;
+    public final static int OPTION_VIEW_EDIT_HISTORY = 13371;
+    public final static int OPTION_LOCAL_EDIT = 13372;
     public final static int OPTION_PIN = 13;
     public final static int OPTION_UNPIN = 14;
     public final static int OPTION_ADD_CONTACT = 15;
@@ -34055,6 +34057,66 @@ public class ChatActivity extends BaseFragment implements
         return null;
     }
 
+    private void showAxionEditHistoryDialog(MessageObject msg) {
+        if (getParentActivity() == null || msg == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("История изменений");
+        java.util.ArrayList<org.telegram.messenger.AxionConfig.MessageEditRecord> history = org.telegram.messenger.AxionConfig.getEditHistory(msg.getId());
+        StringBuilder sb = new StringBuilder();
+        if (history != null && !history.isEmpty()) {
+            for (int i = 0; i < history.size(); i++) {
+                org.telegram.messenger.AxionConfig.MessageEditRecord rec = history.get(i);
+                sb.append("Редакция ").append(i + 1);
+                if (rec.date > 0) {
+                    sb.append(" (").append(LocaleController.formatDateTime(rec.date)).append(")");
+                }
+                sb.append(":\n").append(rec.text).append("\n\n");
+            }
+            sb.append("Текущий текст:\n").append(msg.messageText);
+        } else if (msg.messageOwner != null && msg.messageOwner.edit_date != 0) {
+            sb.append("Отредактировано: ").append(LocaleController.formatDateTime(msg.messageOwner.edit_date));
+            sb.append("\n\nПредыдущие версии сообщения не были сохранены в памяти клиента до редактирования.\n\nТекущий текст:\n").append(msg.messageText);
+        } else {
+            sb.append("История изменений для данного сообщения отсутствует.\n\nТекущий текст:\n").append(msg.messageText);
+        }
+        builder.setMessage(sb.toString().trim());
+        builder.setPositiveButton(LocaleController.getString(R.string.OK), null);
+        showDialog(builder.create());
+    }
+
+    private void showAxionLocalEditDialog(MessageObject msg) {
+        if (getParentActivity() == null || msg == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle("Локальное изменение");
+        builder.setMessage("Измените текст сообщения на экране (визуально):");
+
+        final android.widget.EditText editText = new android.widget.EditText(getParentActivity());
+        CharSequence currentText = msg.messageText != null ? msg.messageText : (msg.messageOwner != null ? msg.messageOwner.message : "");
+        editText.setText(currentText);
+        editText.setSelection(editText.getText().length());
+
+        android.widget.FrameLayout frameLayout = new android.widget.FrameLayout(getParentActivity());
+        frameLayout.setPadding(AndroidUtilities.dp(20), AndroidUtilities.dp(8), AndroidUtilities.dp(20), AndroidUtilities.dp(8));
+        frameLayout.addView(editText, org.telegram.ui.Components.LayoutHelper.createFrame(org.telegram.ui.Components.LayoutHelper.MATCH_PARENT, org.telegram.ui.Components.LayoutHelper.WRAP_CONTENT));
+        builder.setView(frameLayout);
+
+        builder.setPositiveButton("Сохранить", (dialog, which) -> {
+            String newText = editText.getText().toString();
+            if (msg.messageOwner != null) {
+                msg.messageOwner.message = newText;
+            }
+            msg.messageText = newText;
+            msg.resetLayout();
+            if (chatAdapter != null) {
+                chatAdapter.notifyDataSetChanged();
+            }
+            updateMessagesVisibleSubviews();
+            org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.drawable.msg_edit, "Текст сообщения изменен локально").show();
+        });
+        builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
+        showDialog(builder.create());
+    }
+
     private void startEditingMessageObject(MessageObject messageObject) {
         startEditingMessageObject(messageObject, false);
     }
@@ -34782,6 +34844,24 @@ public class ChatActivity extends BaseFragment implements
                     startEditingMessageObject(selectedObjectToEditCaption, option == OPTION_SUGGESTION_EDIT_MESSAGE);
                 } else {
                     startEditingMessageObject(selectedObject, option == OPTION_SUGGESTION_EDIT_MESSAGE);
+                }
+                selectedObject = null;
+                selectedObjectGroup = null;
+                selectedObjectToEditCaption = null;
+                break;
+            }
+            case OPTION_VIEW_EDIT_HISTORY: {
+                if (selectedObject != null) {
+                    showAxionEditHistoryDialog(selectedObject);
+                }
+                selectedObject = null;
+                selectedObjectGroup = null;
+                selectedObjectToEditCaption = null;
+                break;
+            }
+            case OPTION_LOCAL_EDIT: {
+                if (selectedObject != null) {
+                    showAxionLocalEditDialog(selectedObject);
                 }
                 selectedObject = null;
                 selectedObjectGroup = null;
@@ -46621,6 +46701,16 @@ public class ChatActivity extends BaseFragment implements
                 if (message.canEditMessage(currentChat) && message.type != MessageObject.TYPE_POLL || chatMode == MODE_WELCOME_MESSAGES) {
                     items.add(LocaleController.getString(R.string.Edit));
                     options.add(OPTION_EDIT);
+                    icons.add(R.drawable.msg_edit);
+                }
+                if (org.telegram.messenger.AxionConfig.saveEditHistory && (selectedObject != null && (selectedObject.isEdited() || org.telegram.messenger.AxionConfig.hasEditHistory(selectedObject.getId())))) {
+                    items.add("История изменений");
+                    options.add(OPTION_VIEW_EDIT_HISTORY);
+                    icons.add(R.drawable.msg_log);
+                }
+                if (org.telegram.messenger.AxionConfig.localMessageEdit && selectedObject != null && selectedObject.messageOwner != null && (selectedObject.type == 0 || selectedObject.caption != null)) {
+                    items.add("Изменить (локально)");
+                    options.add(OPTION_LOCAL_EDIT);
                     icons.add(R.drawable.msg_edit);
                 }
                 if (ChatObject.isMonoForum(currentChat) && selectedObject.getGroupId() == 0 && selectedObjectGroup == null && message != null && message.messageOwner != null && message.messageOwner.suggested_post == null && message.messageOwner.action == null) {

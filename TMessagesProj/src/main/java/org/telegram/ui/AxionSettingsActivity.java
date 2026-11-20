@@ -32,6 +32,9 @@ public class AxionSettingsActivity extends UniversalFragment {
     private static final int ID_CONFIRM_CALL = 12;
     private static final int ID_CUSTOM_USERNAME = 13;
     private static final int ID_LOCAL_PREMIUM = 14;
+    private static final int ID_SHOW_DELETED_MARK = 15;
+    private static final int ID_SAVE_EDIT_HISTORY = 16;
+    private static final int ID_LOCAL_MESSAGE_EDIT = 17;
 
     @Override
     protected boolean useSimpleActionBar() {
@@ -95,6 +98,18 @@ public class AxionSettingsActivity extends UniversalFragment {
         items.add(UItem.asCheck(ID_CONFIRM_CALL, "Подтверждение перед звонком")
                 .setChecked(AxionConfig.confirmCall));
         items.add(UItem.asShadow("Показывает диалог подтверждения перед началом голосового или видеозвонка."));
+
+        items.add(UItem.asCheck(ID_SHOW_DELETED_MARK, "Метка на удаленных сообщениях (🗑️)")
+                .setChecked(AxionConfig.showDeletedMark));
+        items.add(UItem.asShadow("Отображает значок корзины рядом со временем удаленных собеседником сообщений."));
+
+        items.add(UItem.asCheck(ID_SAVE_EDIT_HISTORY, "История изменений сообщений")
+                .setChecked(AxionConfig.saveEditHistory));
+        items.add(UItem.asShadow("Сохраняет редакции сообщений и позволяет просматривать историю изменений в меню сообщения."));
+
+        items.add(UItem.asCheck(ID_LOCAL_MESSAGE_EDIT, "Локальное редактирование любых сообщений")
+                .setChecked(AxionConfig.localMessageEdit));
+        items.add(UItem.asShadow("Добавляет пункт «Изменить (локально)» в контекстное меню для визуального изменения текста."));
 
         items.add(UItem.asHeader("Защита контента и интерфейс"));
         items.add(UItem.asCheck(ID_ALLOW_SAVE_RESTRICTED, "Разрешить скриншоты и сохранение")
@@ -173,11 +188,17 @@ public class AxionSettingsActivity extends UniversalFragment {
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_LOCAL_PREMIUM) {
             AxionConfig.setLocalPremium(!AxionConfig.localPremium);
-            if (getUserConfig().getCurrentUser() != null) {
-                getUserConfig().getCurrentUser().premium = AxionConfig.localPremium;
-            }
             getNotificationCenter().postNotificationName(org.telegram.messenger.NotificationCenter.currentUserPremiumStatusChanged);
             org.telegram.messenger.NotificationCenter.getGlobalInstance().postNotificationName(org.telegram.messenger.NotificationCenter.premiumStatusChangedGlobal);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_SHOW_DELETED_MARK) {
+            AxionConfig.setShowDeletedMark(!AxionConfig.showDeletedMark);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_SAVE_EDIT_HISTORY) {
+            AxionConfig.setSaveEditHistory(!AxionConfig.saveEditHistory);
+            if (listView != null && listView.adapter != null) listView.adapter.update(true);
+        } else if (item.id == ID_LOCAL_MESSAGE_EDIT) {
+            AxionConfig.setLocalMessageEdit(!AxionConfig.localMessageEdit);
             if (listView != null && listView.adapter != null) listView.adapter.update(true);
         } else if (item.id == ID_CUSTOM_USERNAME) {
             showVisualUsernamesDialog();

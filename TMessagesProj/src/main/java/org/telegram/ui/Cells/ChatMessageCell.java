@@ -15562,20 +15562,22 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
     public static String timeString(MessageObject current, MessageObject message, boolean edited, int editDate) {
         if (current.notime || current.isSponsored() || current.isQuickReply() || current.isWelcomeMessage()) {
             return "";
-        } else if (current.scheduled && current.messageOwner.date == 0x7FFFFFFE) {
+        }
+        String prefix = (org.telegram.messenger.AxionConfig.showDeletedMark && (current.isAxionDeleted() || (message != null && message.isAxionDeleted()))) ? "🗑️ " : "";
+        if (current.scheduled && current.messageOwner.date == 0x7FFFFFFE) {
             return "";
         } else if (current.realDate != 0) {
-            return LocaleController.formatSmallDateChat(current.realDate) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (current.realDate) * 1000);
+            return prefix + LocaleController.formatSmallDateChat(current.realDate) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (current.realDate) * 1000);
         } else if (current.isRepostPreview) {
-            return LocaleController.formatSmallDateChat(message.messageOwner.date) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
+            return prefix + LocaleController.formatSmallDateChat(message.messageOwner.date) + ", " + LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
         } else if (edited) {
             if (AppGlobalConfig.getInstance(current.currentAccount).messagePrimaryEditedDate.get()) {
                 if (editDate == 0 && current.isEditing()) {
                     editDate = ConnectionsManager.getInstance(current.currentAccount).getCurrentTime();
                 }
-                return LocaleController.formatPmEditedDate(editDate);
+                return prefix + LocaleController.formatPmEditedDate(editDate);
             }
-            return getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
+            return prefix + getString(R.string.EditedMessage) + " " + LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
         } else if (current.isSaved && current.messageOwner.fwd_from != null && (current.messageOwner.fwd_from.date != 0 || current.messageOwner.fwd_from.saved_date != 0)
                 // A widget keeps its time alone in Saved Messages: the pill over its corner stays short.
                 && !(MessageObject.getMedia(current.messageOwner) instanceof TLRPC.TL_messageMediaWidget)) {
@@ -15583,9 +15585,9 @@ public class ChatMessageCell extends BaseCell implements SeekBar.SeekBarDelegate
             if (date == 0) {
                 date = current.messageOwner.fwd_from.date;
             }
-            return LocaleController.formatSeenDate(date);
+            return prefix + LocaleController.formatSeenDate(date);
         }
-        return LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
+        return prefix + LocaleController.getInstance().getFormatterDay().format((long) (message.messageOwner.date) * 1000);
     }
 
     void measureTime(MessageObject messageObject) {

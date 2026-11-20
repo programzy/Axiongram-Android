@@ -462,7 +462,10 @@ public class ConnectionsManager extends BaseController {
         )) {
             if (onComplete != null) {
                 try {
-                    if (object instanceof TLRPC.TL_messages_readDiscussion || object.getClass().getSimpleName().contains("readDiscussion")) {
+                    if (object instanceof TLRPC.TL_channels_readHistory ||
+                        object instanceof TLRPC.TL_messages_readDiscussion ||
+                        object.getClass().getSimpleName().contains("readDiscussion") ||
+                        object.getClass().getSimpleName().contains("channels_readHistory")) {
                         onComplete.run(new TLRPC.TL_boolTrue(), null);
                     } else {
                         TLRPC.TL_messages_affectedMessages fakeRes = new TLRPC.TL_messages_affectedMessages();
@@ -784,37 +787,11 @@ public class ConnectionsManager extends BaseController {
                         proxySettings.getUser(), proxySettings.getPassword(), proxySettings.getSecret());
             }
         }
-        String installer = "";
-        try {
-            Context context = ApplicationLoader.applicationContext;
-            if (Build.VERSION.SDK_INT >= 30) {
-                InstallSourceInfo installSourceInfo = context.getPackageManager().getInstallSourceInfo(context.getPackageName());
-                if (installSourceInfo != null) {
-                    installer = installSourceInfo.getInitiatingPackageName();
-                    if (installer == null) {
-                        installer = installSourceInfo.getInstallingPackageName();
-                    }
-                }
-            } else {
-                installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
-            }
-        } catch (Throwable ignore) {
+        String installer = "com.android.vending";
+        String packageId = "org.telegram.messenger";
+        boolean safeUserPremium = false;
 
-        }
-        if (installer == null) {
-            installer = "";
-        }
-        String packageId = "";
-        try {
-            packageId = ApplicationLoader.applicationContext.getPackageName();
-        } catch (Throwable ignore) {
-
-        }
-        if (packageId == null) {
-            packageId = "";
-        }
-
-        native_init(currentAccount, version, layer, apiId, deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, logPath, regId, cFingerprint, installer, packageId, timezoneOffset, userId, userPremium, enablePushConnection, ApplicationLoader.isNetworkOnline(), ApplicationLoader.getCurrentNetworkType(), SharedConfig.measureDevicePerformanceClass());
+        native_init(currentAccount, version, layer, apiId, deviceModel, systemVersion, appVersion, langCode, systemLangCode, configPath, logPath, regId, cFingerprint, installer, packageId, timezoneOffset, userId, safeUserPremium, enablePushConnection, ApplicationLoader.isNetworkOnline(), ApplicationLoader.getCurrentNetworkType(), SharedConfig.measureDevicePerformanceClass());
         checkConnection();
     }
 

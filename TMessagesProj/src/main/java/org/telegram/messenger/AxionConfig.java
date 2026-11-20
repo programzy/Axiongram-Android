@@ -25,6 +25,9 @@ public class AxionConfig {
     public static boolean forwardNoQuote = false;
     public static boolean confirmCall = true;
     public static boolean localPremium = true;
+    public static boolean showDeletedMark = true;
+    public static boolean saveEditHistory = true;
+    public static boolean localMessageEdit = true;
 
     public static boolean customUsernameEnabled = false;
     public static String customUsername = "";
@@ -54,6 +57,9 @@ public class AxionConfig {
                 forwardNoQuote = preferences.getBoolean("forwardNoQuote", false);
                 confirmCall = preferences.getBoolean("confirmCall", true);
                 localPremium = preferences.getBoolean("localPremium", true);
+                showDeletedMark = preferences.getBoolean("showDeletedMark", true);
+                saveEditHistory = preferences.getBoolean("saveEditHistory", true);
+                localMessageEdit = preferences.getBoolean("localMessageEdit", true);
 
                 customUsernameEnabled = preferences.getBoolean("customUsernameEnabled", false);
                 customUsername = preferences.getString("customUsername", "");
@@ -78,6 +84,51 @@ public class AxionConfig {
     public static void setForwardNoQuote(boolean value) { forwardNoQuote = value; save("forwardNoQuote", value); }
     public static void setConfirmCall(boolean value) { confirmCall = value; save("confirmCall", value); }
     public static void setLocalPremium(boolean value) { localPremium = value; save("localPremium", value); }
+    public static void setShowDeletedMark(boolean value) { showDeletedMark = value; save("showDeletedMark", value); }
+    public static void setSaveEditHistory(boolean value) { saveEditHistory = value; save("saveEditHistory", value); }
+    public static void setLocalMessageEdit(boolean value) { localMessageEdit = value; save("localMessageEdit", value); }
+
+    public static class MessageEditRecord {
+        public final String text;
+        public final int date;
+        public MessageEditRecord(String text, int date) {
+            this.text = text;
+            this.date = date;
+        }
+    }
+
+    private static final HashMap<Long, ArrayList<MessageEditRecord>> editHistoryMap = new HashMap<>();
+    private static final java.util.HashSet<Long> deletedMessageIds = new java.util.HashSet<>();
+
+    public static synchronized void addEditHistory(long messageId, String text, int date) {
+        if (!saveEditHistory || text == null) return;
+        ArrayList<MessageEditRecord> list = editHistoryMap.get(messageId);
+        if (list == null) {
+            list = new ArrayList<>();
+            editHistoryMap.put(messageId, list);
+        }
+        if (!list.isEmpty() && text.equals(list.get(list.size() - 1).text)) {
+            return;
+        }
+        list.add(new MessageEditRecord(text, date));
+    }
+
+    public static synchronized ArrayList<MessageEditRecord> getEditHistory(long messageId) {
+        return editHistoryMap.get(messageId);
+    }
+
+    public static synchronized boolean hasEditHistory(long messageId) {
+        ArrayList<MessageEditRecord> list = editHistoryMap.get(messageId);
+        return list != null && !list.isEmpty();
+    }
+
+    public static synchronized void markMessageDeleted(long messageId) {
+        deletedMessageIds.add(messageId);
+    }
+
+    public static synchronized boolean isMessageDeleted(long messageId) {
+        return deletedMessageIds.contains(messageId);
+    }
 
     public static void setCustomUsernameEnabled(boolean value) { customUsernameEnabled = value; save("customUsernameEnabled", value); }
     public static void setCustomUsername(String value) { customUsername = value; save("customUsername", value); }

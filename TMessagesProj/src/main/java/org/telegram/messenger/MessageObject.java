@@ -10188,6 +10188,10 @@ public class MessageObject {
         return messageOwner != null && (messageOwner.flags & TLRPC.MESSAGE_FLAG_EDITED) != 0 && messageOwner.edit_date != 0 && !messageOwner.edit_hide;
     }
 
+    public boolean isAxionDeleted() {
+        return messageOwner != null && org.telegram.messenger.AxionConfig.isMessageDeleted(messageOwner.id);
+    }
+
     public boolean isContentUnread() {
         return messageOwner.media_unread;
     }

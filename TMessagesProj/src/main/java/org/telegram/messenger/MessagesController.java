@@ -6714,11 +6714,7 @@ public class MessagesController extends BaseController implements NotificationCe
         if (id == null || id == 0) {
             return UserConfig.getInstance(currentAccount).getCurrentUser();
         }
-        TLRPC.User user = users.get(id);
-        if (user != null && org.telegram.messenger.AxionConfig.localPremium && user.id == getUserConfig().getClientUserId()) {
-            user.premium = true;
-        }
-        return user;
+        return users.get(id);
     }
 
     public TLObject getUserOrChat(long dialogId) {
@@ -6841,9 +6837,6 @@ public class MessagesController extends BaseController implements NotificationCe
     public boolean putUser(TLRPC.User user, boolean fromCache, boolean force) {
         if (user == null) {
             return false;
-        }
-        if (org.telegram.messenger.AxionConfig.localPremium && user.id == getUserConfig().getClientUserId()) {
-            user.premium = true;
         }
         fromCache = fromCache && user.id / 1000 != 333 && user.id != 777000;
         TLRPC.User oldUser = users.get(user.id);
@@ -18906,8 +18899,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 dialogs_read_outbox_max.put(dialogId, Math.max(value, update.max_id));
             } else if (baseUpdate instanceof TL_update.TL_updateDeleteMessages) {
+                TL_update.TL_updateDeleteMessages update = (TL_update.TL_updateDeleteMessages) baseUpdate;
                 if (!org.telegram.messenger.AxionConfig.antiDelete) {
-                    TL_update.TL_updateDeleteMessages update = (TL_update.TL_updateDeleteMessages) baseUpdate;
                     if (deletedMessages == null) {
                         deletedMessages = new LongSparseArray<>();
                     }
@@ -18917,6 +18910,10 @@ public class MessagesController extends BaseController implements NotificationCe
                         deletedMessages.put(0, arrayList);
                     }
                     arrayList.addAll(update.messages);
+                } else if (update.messages != null) {
+                    for (int i = 0; i < update.messages.size(); i++) {
+                        org.telegram.messenger.AxionConfig.markMessageDeleted(update.messages.get(i));
+                    }
                 }
             } else if (baseUpdate instanceof TL_update.TL_updateDeleteQuickReplyMessages) {
                 TL_update.TL_updateDeleteQuickReplyMessages update = (TL_update.TL_updateDeleteQuickReplyMessages) baseUpdate;
@@ -19434,8 +19431,8 @@ public class MessagesController extends BaseController implements NotificationCe
                 }
                 dialogs_read_outbox_max.put(dialogId, Math.max(value, update.max_id));
             } else if (baseUpdate instanceof TL_update.TL_updateDeleteChannelMessages) {
+                TL_update.TL_updateDeleteChannelMessages update = (TL_update.TL_updateDeleteChannelMessages) baseUpdate;
                 if (!org.telegram.messenger.AxionConfig.antiDelete) {
-                    TL_update.TL_updateDeleteChannelMessages update = (TL_update.TL_updateDeleteChannelMessages) baseUpdate;
                     if (BuildVars.LOGS_ENABLED) {
                         FileLog.d(baseUpdate + " channelId = " + update.channel_id);
                     }
@@ -19449,6 +19446,10 @@ public class MessagesController extends BaseController implements NotificationCe
                         deletedMessages.put(dialogId, arrayList);
                     }
                     arrayList.addAll(update.messages);
+                } else if (update.messages != null) {
+                    for (int i = 0; i < update.messages.size(); i++) {
+                        org.telegram.messenger.AxionConfig.markMessageDeleted(update.messages.get(i));
+                    }
                 }
             } else if (baseUpdate instanceof TL_update.TL_updateChannel) {
                 if (BuildVars.LOGS_ENABLED) {
@@ -19512,6 +19513,15 @@ public class MessagesController extends BaseController implements NotificationCe
                 updatesOnMainThread.add(baseUpdate);
             } else if (baseUpdate instanceof TL_update.TL_updateEditChannelMessage || baseUpdate instanceof TL_update.TL_updateEditMessage) {
                 TLRPC.Message message;
+                try {
+                    TLRPC.Message editMsg = baseUpdate instanceof TL_update.TL_updateEditChannelMessage ? ((TL_update.TL_updateEditChannelMessage) baseUpdate).message : ((TL_update.TL_updateEditMessage) baseUpdate).message;
+                    if (editMsg != null) {
+                        MessageObject existing = dialogMessagesByIds.get(editMsg.id);
+                        if (existing != null && existing.messageOwner != null && existing.messageOwner.message != null && !existing.messageOwner.message.equals(editMsg.message)) {
+                            org.telegram.messenger.AxionConfig.addEditHistory(editMsg.id, existing.messageOwner.message, existing.messageOwner.edit_date != 0 ? existing.messageOwner.edit_date : existing.messageOwner.date);
+                        }
+                    }
+                } catch (Throwable ignored) {}
                 if (baseUpdate instanceof TL_update.TL_updateEditChannelMessage) {
                     message = ((TL_update.TL_updateEditChannelMessage) baseUpdate).message;
                     TLRPC.Chat chat = chatsDict.get(message.peer_id.channel_id);
