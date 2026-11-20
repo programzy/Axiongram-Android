@@ -34068,13 +34068,13 @@ public class ChatActivity extends BaseFragment implements
                 org.telegram.messenger.AxionConfig.MessageEditRecord rec = history.get(i);
                 sb.append("Редакция ").append(i + 1);
                 if (rec.date > 0) {
-                    sb.append(" (").append(LocaleController.formatDateTime(rec.date)).append(")");
+                    sb.append(" (").append(LocaleController.formatDateTime((long) rec.date, false)).append(")");
                 }
                 sb.append(":\n").append(rec.text).append("\n\n");
             }
             sb.append("Текущий текст:\n").append(msg.messageText);
         } else if (msg.messageOwner != null && msg.messageOwner.edit_date != 0) {
-            sb.append("Отредактировано: ").append(LocaleController.formatDateTime(msg.messageOwner.edit_date));
+            sb.append("Отредактировано: ").append(LocaleController.formatDateTime((long) msg.messageOwner.edit_date, false));
             sb.append("\n\nПредыдущие версии сообщения не были сохранены в памяти клиента до редактирования.\n\nТекущий текст:\n").append(msg.messageText);
         } else {
             sb.append("История изменений для данного сообщения отсутствует.\n\nТекущий текст:\n").append(msg.messageText);
@@ -34110,7 +34110,7 @@ public class ChatActivity extends BaseFragment implements
             if (chatAdapter != null) {
                 chatAdapter.notifyDataSetChanged();
             }
-            updateMessagesVisibleSubviews();
+            updateVisibleRows();
             org.telegram.ui.Components.BulletinFactory.of(ChatActivity.this).createSimpleBulletin(R.drawable.msg_edit, "Текст сообщения изменен локально").show();
         });
         builder.setNegativeButton(LocaleController.getString(R.string.Cancel), null);
