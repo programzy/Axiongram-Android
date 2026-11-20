@@ -436,12 +436,12 @@ public class ConnectionsManager extends BaseController {
 
         // 2. Offline mode: mark status packet as offline
         if (org.telegram.messenger.AxionConfig.offlineMode && (
-                object instanceof TLRPC.TL_account_updateStatus ||
-                object.getClass().getSimpleName().contains("updateStatus")
+                object instanceof org.telegram.tgnet.tl.TL_account.updateStatus ||
+                (object != null && object.getClass().getName().contains("updateStatus"))
         )) {
             try {
-                if (object instanceof TLRPC.TL_account_updateStatus) {
-                    ((TLRPC.TL_account_updateStatus) object).offline = true;
+                if (object instanceof org.telegram.tgnet.tl.TL_account.updateStatus) {
+                    ((org.telegram.tgnet.tl.TL_account.updateStatus) object).offline = true;
                 } else {
                     java.lang.reflect.Field f = object.getClass().getField("offline");
                     f.setBoolean(object, true);
